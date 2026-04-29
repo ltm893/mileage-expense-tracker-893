@@ -1,0 +1,28 @@
+{
+  "name": "mileage-expense-tracker-893",
+  "version": "1.0.0",
+  "description": "CDK stack for the mileage & expense tracker app (met893)",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "npx cdk deploy",
+    "destroy": "npx cdk destroy",
+    "diff": "npx cdk diff",
+    "synth": "npx cdk synth"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.137",
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.130.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/client-textract": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "@aws-sdk/s3-request-presigner": "^3.0.0",
+    "aws-cdk-lib": "^2.130.0",
+    "constructs": "^10.0.0"
+  }
+}
