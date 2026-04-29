@@ -8,3 +8,7 @@ met_outputs.json
 
 # macOS
 .DS_Store
+
+# Xcode user data — machine-specific, should not be committed
+*.xcuserstate
+xcuserdata/
