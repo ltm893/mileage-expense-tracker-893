@@ -1,12 +1,8 @@
 // TripsView.swift
-// One unified trip flow: GPS tracks automatically while user logs odometer readings.
-// Both odometerDistance and gpsDistance are stored in DynamoDB on every trip.
-
 import SwiftUI
 import Combine
 import CoreLocation
 
-// MARK: - ViewModel
 @MainActor
 final class TripsViewModel: ObservableObject {
     @Published var trips:        [Trip]    = []
@@ -41,14 +37,15 @@ final class TripsViewModel: ObservableObject {
 
 // MARK: - TripsView
 struct TripsView: View {
-    @StateObject private var vm      = TripsViewModel()
-    @State private var showNewTrip   = false
+    @StateObject private var vm    = TripsViewModel()
+    @State private var showNewTrip = false
 
     var body: some View {
         NavigationStack {
             Group {
                 if vm.isLoading && vm.trips.isEmpty {
                     ProgressView("Loading trips…")
+                        .tint(AppColors.accent)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if vm.trips.isEmpty {
                     ContentUnavailableView("No Trips", systemImage: "map.fill",
@@ -56,20 +53,24 @@ struct TripsView: View {
                 } else {
                     List {
                         ForEach(vm.trips) { trip in
-                            TripRow(trip: trip,
-                                    vehicleName: vm.vehicleName(for: trip.vehicleId))
+                            TripRow(trip: trip, vehicleName: vm.vehicleName(for: trip.vehicleId))
                         }
                         .onDelete { indexSet in
                             Task { for i in indexSet { await vm.delete(vm.trips[i]) } }
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
+            .background(AppColors.background)
             .navigationTitle("Trips")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showNewTrip = true } label: { Image(systemName: "plus") }
+                    Button { showNewTrip = true } label: {
+                        Image(systemName: "plus").fontWeight(.semibold)
+                    }
+                    .tint(AppColors.accent)
                 }
             }
             .sheet(isPresented: $showNewTrip) {
@@ -79,7 +80,6 @@ struct TripsView: View {
                 Button("OK") { vm.errorMessage = nil }
             }, message: { Text(vm.errorMessage ?? "") })
             .task { await vm.load() }
-            .background(AppColors.background)
         }
     }
 }
@@ -90,45 +90,46 @@ struct TripRow: View {
     let vehicleName: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text(trip.tripDate)
                     .font(.headline).foregroundStyle(AppColors.primary)
                 Spacer()
                 Text(trip.distanceFormatted)
-                    .font(.headline).foregroundStyle(AppColors.accent)
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(AppColors.accent)
             }
 
             HStack(spacing: 6) {
-                // GPS badge
                 if trip.wasGPSTracked {
-                    Label("GPS", systemImage: "location.fill")
-                        .font(.caption2).foregroundStyle(AppColors.accent)
-                        .padding(.horizontal, 5).padding(.vertical, 2)
-                        .background(AppColors.accent.opacity(0.12))
-                        .cornerRadius(4)
+                    HStack(spacing: 3) {
+                        Image(systemName: "location.fill").font(.caption2)
+                        Text("GPS")
+                    }
+                    .font(.caption2).foregroundStyle(AppColors.accent)
+                    .padding(.horizontal, 6).padding(.vertical, 2)
+                    .background(AppColors.accentTint)
+                    .cornerRadius(4)
                 }
-                Text(vehicleName).font(.subheadline).foregroundStyle(.secondary)
+                Text(vehicleName)
+                    .font(.subheadline).foregroundStyle(AppColors.secondaryText)
             }
 
-            // Show both measurements when available
             if let detail = trip.distanceDetail {
-                Text(detail).font(.caption).foregroundStyle(.secondary)
+                Text(detail)
+                    .font(.caption).foregroundStyle(AppColors.secondaryText)
             }
 
             if !trip.purpose.isEmpty {
-                Text(trip.purpose).font(.caption).foregroundStyle(.secondary)
+                Text(trip.purpose)
+                    .font(.caption).foregroundStyle(AppColors.secondaryText)
             }
         }
         .padding(.vertical, 4)
     }
 }
 
-// MARK: - New Trip (unified odometer + GPS)
-// Flow:
-//   Step 1 — Setup:   pick vehicle, enter start odometer (required), purpose
-//   Step 2 — Active:  GPS tracks live distance while driving
-//   Step 3 — End:     enter end odometer, review both distances, save
+// MARK: - New Trip (unified GPS + odometer)
 struct NewTripView: View {
     let vehicles: [Vehicle]
     var onSaved:  () async -> Void
@@ -136,18 +137,14 @@ struct NewTripView: View {
 
     @StateObject private var gps = LocationManager()
 
-    // Step 1 state
     @State private var selectedVehicleId = ""
     @State private var startOdometer     = ""
     @State private var purpose           = ""
-
-    // Step 3 state
     @State private var endOdometer       = ""
     @State private var isSaving          = false
-    @State private var errorMessage:       String?
-
-    // Steps: 1 = setup, 2 = active trip, 3 = end/save
-    @State private var step = 1
+    @State private var showError         = false
+    @State private var errorMessage      = ""
+    @State private var step              = 1
 
     private let api = NetworkService.shared
     private static let df: DateFormatter = {
@@ -168,37 +165,37 @@ struct NewTripView: View {
                 default: EmptyView()
                 }
             }
+            .background(AppColors.background)
             .navigationTitle(stepTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        gps.stopTrip()
-                        dismiss()
-                    }
+                    Button("Cancel") { gps.stopTrip(); dismiss() }
+                        .tint(AppColors.secondaryText)
                 }
                 if step == 1 {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Start") { startTrip() }
-                            .fontWeight(.semibold)
+                            .fontWeight(.semibold).tint(AppColors.accent)
                             .disabled(!canStart)
                     }
                 }
                 if step == 3 {
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Save") { Task { await save() } }
-                            .fontWeight(.semibold)
+                            .fontWeight(.semibold).tint(AppColors.accent)
                             .disabled(isSaving || endOdometer.isEmpty)
                     }
                 }
             }
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(errorMessage) }
             .onAppear {
                 if selectedVehicleId.isEmpty, let first = vehicles.first {
                     selectedVehicleId = first.vehicleId
                 }
-                if gps.authorizationStatus == .notDetermined {
-                    gps.requestPermission()
-                }
+                if gps.authorizationStatus == .notDetermined { gps.requestPermission() }
             }
         }
     }
@@ -216,155 +213,149 @@ struct NewTripView: View {
         !selectedVehicleId.isEmpty && !startOdometer.isEmpty && gps.canTrack
     }
 
-    // ── Step 1: Setup form ────────────────────────────────────────────────────
+    // ── Step 1: Setup ─────────────────────────────────────────────────────────
     private var setupView: some View {
         Form {
             Section("Vehicle") {
                 if vehicles.isEmpty {
-                    Text("Add a vehicle first.").foregroundStyle(.secondary)
+                    Text("Add a vehicle first.").foregroundStyle(AppColors.secondaryText)
                 } else {
                     Picker("Vehicle", selection: $selectedVehicleId) {
                         ForEach(vehicles) { v in Text(v.name).tag(v.vehicleId) }
                     }
+                    .tint(AppColors.accent)
                 }
             }
-
             Section("Start Odometer") {
                 HStack {
-                    TextField("Current odometer reading", text: $startOdometer)
-                        .keyboardType(.decimalPad)
-                    Text("mi").foregroundStyle(.secondary)
+                    TextField("Current reading", text: $startOdometer).keyboardType(.decimalPad)
+                    Text("mi").foregroundStyle(AppColors.secondaryText)
                 }
             }
-
             Section("Purpose (optional)") {
-                TextField("e.g. Client visit, commute", text: $purpose)
+                TextField("e.g. Client visit", text: $purpose)
             }
-
             if !gps.canTrack {
                 Section {
                     Button("Allow Location Access") { gps.requestPermission() }
                         .foregroundStyle(AppColors.accent)
-                    Text("GPS tracking requires location access.")
-                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .scrollContentBackground(.hidden)
+    }
+
+    // ── Step 2: Active tracking ───────────────────────────────────────────────
+    private var activeView: some View {
+        VStack(spacing: 28) {
+            Spacer()
+
+            ZStack {
+                Circle()
+                    .fill(AppColors.accentTint)
+                    .frame(width: 180, height: 180)
+                Circle()
+                    .strokeBorder(AppColors.accent, lineWidth: 3)
+                    .frame(width: 180, height: 180)
+                VStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(AppColors.accent)
+                        .symbolEffect(.pulse)
+                    Text(String(format: "%.2f", gps.distanceMiles))
+                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .foregroundStyle(AppColors.primary)
+                    Text("GPS miles")
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.secondaryText)
                 }
             }
 
-            if let error = gps.errorMessage {
-                Section { Text(error).foregroundStyle(AppColors.destructive).font(.caption) }
-            }
-        }
-    }
-
-    // ── Step 2: Active trip display ───────────────────────────────────────────
-    private var activeView: some View {
-        VStack(spacing: 32) {
-            Spacer()
-
-            // GPS distance — primary live display
-            VStack(spacing: 4) {
-                Image(systemName: "location.fill")
-                    .font(.system(size: 36))
-                    .foregroundStyle(AppColors.accent)
-                    .symbolEffect(.pulse)
-
-                Text(String(format: "%.2f", gps.distanceMiles))
-                    .font(.system(size: 80, weight: .bold, design: .rounded))
-                    .foregroundStyle(AppColors.primary)
-
-                Text("GPS miles")
-                    .font(.title3).foregroundStyle(.secondary)
-            }
-
-            // Elapsed time
             Text(gps.elapsedFormatted)
                 .font(.title2.monospacedDigit())
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColors.secondaryText)
 
-            // Start odometer reminder
-            HStack(spacing: 4) {
+            HStack(spacing: 6) {
                 Image(systemName: "gauge.with.needle")
                 Text("Started at \(startOdometer) mi")
             }
             .font(.subheadline)
-            .foregroundStyle(.secondary)
+            .foregroundStyle(AppColors.secondaryText)
 
             Spacer()
 
-            // End trip button
             Button {
                 gps.stopTrip()
                 step = 3
             } label: {
                 Label("End Trip", systemImage: "stop.circle.fill")
                     .font(.title3.bold())
-                    .frame(maxWidth: .infinity)
-                    .padding()
+                    .frame(maxWidth: .infinity).padding()
                     .background(AppColors.destructive)
                     .foregroundStyle(.white)
                     .cornerRadius(14)
+                    .shadow(color: AppColors.destructive.opacity(0.3), radius: 8, y: 4)
             }
             .padding(.horizontal, 32)
             .padding(.bottom, 40)
         }
     }
 
-    // ── Step 3: End trip / review + save ─────────────────────────────────────
+    // ── Step 3: End / save ────────────────────────────────────────────────────
     private var endView: some View {
         Form {
-            // Summary of GPS measurement
             Section("GPS Result") {
-                LabeledContent("Distance",
-                    value: String(format: "%.2f mi", gps.distanceMiles))
-                LabeledContent("Duration", value: gps.elapsedFormatted)
+                LabeledContent("Distance") {
+                    Text(String(format: "%.2f mi", gps.distanceMiles))
+                        .foregroundStyle(AppColors.accent).fontWeight(.semibold)
+                }
+                LabeledContent("Duration") {
+                    Text(gps.elapsedFormatted).foregroundStyle(AppColors.secondaryText)
+                }
             }
-
-            // Odometer end reading
             Section("End Odometer") {
                 HStack {
-                    TextField("Current odometer reading", text: $endOdometer)
-                        .keyboardType(.decimalPad)
-                    Text("mi").foregroundStyle(.secondary)
+                    TextField("Current reading", text: $endOdometer).keyboardType(.decimalPad)
+                    Text("mi").foregroundStyle(AppColors.secondaryText)
                 }
                 if odometerDistance > 0 {
-                    LabeledContent("Odometer distance",
-                        value: String(format: "%.1f mi", odometerDistance))
+                    LabeledContent("Odometer distance") {
+                        Text(String(format: "%.1f mi", odometerDistance))
+                            .foregroundStyle(AppColors.accent)
+                    }
                 }
             }
-
-            // Comparison when both are available
             if odometerDistance > 0 && gps.distanceMiles > 0 {
                 Section("Comparison") {
-                    LabeledContent("GPS",      value: String(format: "%.2f mi", gps.distanceMiles))
-                    LabeledContent("Odometer", value: String(format: "%.1f mi", odometerDistance))
+                    LabeledContent("GPS") {
+                        Text(String(format: "%.2f mi", gps.distanceMiles))
+                            .foregroundStyle(AppColors.accent)
+                    }
+                    LabeledContent("Odometer") {
+                        Text(String(format: "%.1f mi", odometerDistance))
+                            .foregroundStyle(AppColors.primary)
+                    }
                     let diff = abs(gps.distanceMiles - odometerDistance)
-                    LabeledContent("Difference", value: String(format: "%.2f mi", diff))
-                        .foregroundStyle(diff > 2 ? .orange : .secondary)
+                    LabeledContent("Difference") {
+                        Text(String(format: "%.2f mi", diff))
+                            .foregroundStyle(diff > 2 ? AppColors.warning : AppColors.secondaryText)
+                    }
                 }
             }
-
             Section("Details") {
                 TextField("Purpose (optional)", text: $purpose)
             }
-
-            if let error = errorMessage {
-                Section { Text(error).foregroundStyle(AppColors.destructive).font(.caption) }
-            }
         }
+        .scrollContentBackground(.hidden)
     }
 
-    // MARK: - Actions
-    private func startTrip() {
-        gps.startTrip()
-        step = 2
-    }
+    private func startTrip() { gps.startTrip(); step = 2 }
 
     private func save() async {
-        isSaving = true; errorMessage = nil
-        let startOdo = Double(startOdometer) ?? 0
-        let endOdo   = Double(endOdometer)   ?? 0
+        isSaving = true
+        let startOdo    = Double(startOdometer) ?? 0
+        let endOdo      = Double(endOdometer)   ?? 0
         let odoDistance = max(0, endOdo - startOdo)
-
         do {
             let body = CreateTripRequest(
                 vehicleId:        selectedVehicleId,
@@ -377,9 +368,11 @@ struct NewTripView: View {
                 notes:            ""
             )
             let _: Trip = try await api.post("trips", body: body)
-            await onSaved()
-            dismiss()
-        } catch { errorMessage = error.localizedDescription }
+            await onSaved(); dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
+        }
         isSaving = false
     }
 }

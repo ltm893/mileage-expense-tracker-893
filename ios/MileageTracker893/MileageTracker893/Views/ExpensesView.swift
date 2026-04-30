@@ -1,7 +1,6 @@
 // ExpensesView.swift
 import SwiftUI
 import Combine
-import PhotosUI
 
 @MainActor
 final class ExpensesViewModel: ObservableObject {
@@ -30,13 +29,15 @@ final class ExpensesViewModel: ObservableObject {
         } catch { errorMessage = error.localizedDescription }
     }
 
-    func vehicleName(for id: String) -> String {
-        vehicles.first { $0.vehicleId == id }?.name ?? "Unknown Vehicle"
+    func vehicleName(for id: String?) -> String {
+        guard let id else { return "General" }
+        return vehicles.first { $0.vehicleId == id }?.name ?? "Unknown Vehicle"
     }
 
     var totalAmount: Double { expenses.reduce(0) { $0 + $1.amount } }
 }
 
+// MARK: - ExpensesView
 struct ExpensesView: View {
     @StateObject private var vm = ExpensesViewModel()
     @State private var showAdd  = false
@@ -45,18 +46,24 @@ struct ExpensesView: View {
         NavigationStack {
             Group {
                 if vm.isLoading && vm.expenses.isEmpty {
-                    ProgressView("Loading expenses…").frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ProgressView("Loading expenses…")
+                        .tint(AppColors.accent)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if vm.expenses.isEmpty {
                     ContentUnavailableView("No Expenses", systemImage: "creditcard.fill",
                         description: Text("Tap + to log your first expense."))
                 } else {
                     List {
+                        // ── Total card — no sigma, plain "Total" label ─────────
                         Section {
                             HStack {
-                                Label("Total", systemImage: "sum").foregroundStyle(AppColors.primary)
+                                Text("Total")
+                                    .font(.headline)
+                                    .foregroundStyle(AppColors.primary)
                                 Spacer()
                                 Text(String(format: "$%.2f", vm.totalAmount))
-                                    .font(.headline).foregroundStyle(AppColors.accent)
+                                    .font(.headline.monospacedDigit())
+                                    .foregroundStyle(AppColors.accent)
                             }
                         }
                         ForEach(vm.expenses) { expense in
@@ -65,8 +72,10 @@ struct ExpensesView: View {
                                 vehicleName: vm.vehicleName(for: expense.vehicleId),
                                 onUpdated: { await vm.load() }
                             )) {
-                                ExpenseRow(expense: expense,
-                                           vehicleName: vm.vehicleName(for: expense.vehicleId))
+                                ExpenseRow(
+                                    expense:     expense,
+                                    vehicleName: vm.vehicleName(for: expense.vehicleId)
+                                )
                             }
                         }
                         .onDelete { indexSet in
@@ -74,12 +83,17 @@ struct ExpensesView: View {
                         }
                     }
                     .listStyle(.insetGrouped)
+                    .scrollContentBackground(.hidden)
                 }
             }
+            .background(AppColors.background)
             .navigationTitle("Expenses")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button { showAdd = true } label: { Image(systemName: "plus") }
+                    Button { showAdd = true } label: {
+                        Image(systemName: "plus").fontWeight(.semibold)
+                    }
+                    .tint(AppColors.accent)
                 }
             }
             .sheet(isPresented: $showAdd) {
@@ -89,33 +103,65 @@ struct ExpensesView: View {
                 Button("OK") { vm.errorMessage = nil }
             }, message: { Text(vm.errorMessage ?? "") })
             .task { await vm.load() }
-            .background(AppColors.background)
         }
     }
 }
 
+// MARK: - Expense row
+// Line 1: Category icon  |  Category name         Amount
+// Line 2:                   Store name  ·  Date
+// Line 3:                   Receipt status (if any)
 struct ExpenseRow: View {
-    let expense: Expense; let vehicleName: String
+    let expense:     Expense
+    let vehicleName: String
+
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: expense.category.icon)
-                .font(.title2).foregroundStyle(AppColors.accent).frame(width: 36)
-            VStack(alignment: .leading, spacing: 3) {
+            // Category icon circle
+            ZStack {
+                Circle()
+                    .fill(AppColors.accentTint)
+                    .frame(width: 40, height: 40)
+                Image(systemName: expense.category.icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(AppColors.accent)
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                // Line 1: Category + amount
                 HStack {
-                    Text(expense.category.displayName).font(.headline).foregroundStyle(AppColors.primary)
+                    Text(expense.category.displayName)
+                        .font(.headline)
+                        .foregroundStyle(AppColors.primary)
                     Spacer()
-                    Text(expense.amountFormatted).font(.headline).foregroundStyle(AppColors.accent)
+                    Text(expense.amountFormatted)
+                        .font(.headline.monospacedDigit())
+                        .foregroundStyle(AppColors.accent)
                 }
-                Text(vehicleName + " · " + expense.expenseDate).font(.caption).foregroundStyle(.secondary)
-                if !expense.merchant.isEmpty {
-                    Text(expense.merchant).font(.caption).foregroundStyle(.secondary)
+
+                // Line 2: Store · Date
+                HStack(spacing: 4) {
+                    if !expense.merchant.isEmpty {
+                        Text(expense.merchant)
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.secondaryText)
+                        Text("·")
+                            .foregroundStyle(AppColors.secondaryText)
+                    }
+                    Text(expense.expenseDate)
+                        .font(.subheadline)
+                        .foregroundStyle(AppColors.secondaryText)
                 }
+
+                // Line 3: Receipt status only (no vehicle badge)
                 if expense.ocrStatus == .pending {
                     Label("Processing receipt…", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.caption2).foregroundStyle(.orange)
+                        .font(.caption2)
+                        .foregroundStyle(AppColors.warning)
                 } else if expense.ocrStatus == .complete {
                     Label("Receipt scanned", systemImage: "checkmark.circle.fill")
-                        .font(.caption2).foregroundStyle(.green)
+                        .font(.caption2)
+                        .foregroundStyle(AppColors.success)
                 }
             }
         }
@@ -123,83 +169,170 @@ struct ExpenseRow: View {
     }
 }
 
+// MARK: - Add Expense sheet
 struct AddExpenseView: View {
     let vehicles: [Vehicle]
     var onSaved:  () async -> Void
     @Environment(\.dismiss) private var dismiss
 
+    @State private var isVehicleExpense  = false
     @State private var selectedVehicleId = ""
-    @State private var category          = ExpenseCategory.fuel
+    @State private var category          = ExpenseCategory.other
     @State private var amount            = ""
     @State private var expenseDate       = Date()
     @State private var merchant          = ""
     @State private var notes             = ""
+
+    @State private var receiptImage:     UIImage?
+    @State private var showSourcePicker  = false
+    @State private var showCamera        = false
+    @State private var showLibrary       = false
+    @State private var isScanning        = false
     @State private var isSaving          = false
-    @State private var isUploadingPhoto  = false
-    @State private var selectedPhoto:      PhotosPickerItem?
-    @State private var receiptImage:       UIImage?
-    @State private var errorMessage:       String?
+    @State private var scanBadge:          String? = nil
+    @State private var showError         = false
+    @State private var errorMessage      = ""
 
     private let api = NetworkService.shared
     private static let df: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
     }()
 
+    private var cleanedAmount: String {
+        amount
+            .trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: "$", with: "")
+            .replacingOccurrences(of: ",", with: "")
+    }
+
+    private var parsedAmount: Double { Double(cleanedAmount) ?? 0 }
+
+    private var canSave: Bool {
+        guard parsedAmount > 0 else { return false }
+        if isVehicleExpense { return !selectedVehicleId.isEmpty }
+        return true
+    }
+
     var body: some View {
         NavigationStack {
             Form {
-                Section("Vehicle") {
-                    if vehicles.isEmpty {
-                        Text("Add a vehicle first.").foregroundStyle(.secondary)
-                    } else {
-                        Picker("Vehicle", selection: $selectedVehicleId) {
-                            ForEach(vehicles) { v in Text(v.name).tag(v.vehicleId) }
+                Section {
+                    Toggle("Vehicle Expense", isOn: $isVehicleExpense)
+                        .tint(AppColors.accent)
+                        .onChange(of: isVehicleExpense) { _, on in
+                            category = on ? .fuel : .other
+                        }
+                    if isVehicleExpense {
+                        if vehicles.isEmpty {
+                            Text("Add a vehicle first.").foregroundStyle(AppColors.secondaryText)
+                        } else {
+                            Picker("Vehicle", selection: $selectedVehicleId) {
+                                ForEach(vehicles) { v in Text(v.name).tag(v.vehicleId) }
+                            }
+                            .tint(AppColors.accent)
                         }
                     }
+                } header: { Text("Type") } footer: {
+                    Text(isVehicleExpense
+                         ? "Linked to selected vehicle."
+                         : "General expense — not linked to any vehicle.")
+                    .font(.caption)
                 }
-                Section("Expense") {
+
+                Section("Category") {
                     Picker("Category", selection: $category) {
-                        ForEach(ExpenseCategory.allCases, id: \.self) { cat in
-                            Label(cat.displayName, systemImage: cat.icon).tag(cat)
+                        if isVehicleExpense {
+                            Section("Vehicle") {
+                                ForEach(ExpenseCategory.vehicleCategories, id: \.self) { cat in
+                                    Label(cat.displayName, systemImage: cat.icon).tag(cat)
+                                }
+                            }
+                        }
+                        Section("General") {
+                            ForEach(ExpenseCategory.generalCategories, id: \.self) { cat in
+                                Label(cat.displayName, systemImage: cat.icon).tag(cat)
+                            }
                         }
                     }
-                    HStack {
-                        Text("$")
-                        TextField("Amount", text: $amount).keyboardType(.decimalPad)
-                    }
-                    DatePicker("Date", selection: $expenseDate, displayedComponents: .date)
-                    TextField("Merchant (optional)", text: $merchant)
-                    TextField("Notes (optional)",    text: $notes)
+                    .tint(AppColors.accent)
                 }
-                Section("Receipt") {
-                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        if let receiptImage {
+
+                Section {
+                    if let receiptImage {
+                        VStack(alignment: .leading, spacing: 8) {
                             Image(uiImage: receiptImage)
                                 .resizable().scaledToFit()
-                                .frame(maxHeight: 160).cornerRadius(8)
-                        } else {
-                            Label("Attach Receipt Photo", systemImage: "camera.fill")
+                                .frame(maxHeight: 180).cornerRadius(10)
+                            HStack {
+                                if isScanning {
+                                    ProgressView().tint(AppColors.accent)
+                                    Text("Scanning…")
+                                        .font(.caption).foregroundStyle(AppColors.secondaryText)
+                                } else if let badge = scanBadge {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(AppColors.success)
+                                    Text(badge)
+                                        .font(.caption).foregroundStyle(AppColors.success)
+                                }
+                                Spacer()
+                                Button("Retake") { showSourcePicker = true }
+                                    .font(.caption).foregroundStyle(AppColors.accent)
+                            }
+                        }
+                    } else {
+                        Button { showSourcePicker = true } label: {
+                            Label("Add Receipt Photo", systemImage: "camera.fill")
+                                .foregroundStyle(AppColors.accent)
                         }
                     }
-                    .onChange(of: selectedPhoto) { _, item in Task { await loadPhoto(item) } }
-                    if isUploadingPhoto {
-                        HStack {
-                            ProgressView()
-                            Text("Uploading…").font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
+                } header: { Text("Receipt") } footer: {
+                    Text("Photo scanned automatically to fill in amount, date, and merchant.")
+                        .font(.caption)
                 }
-                if let error = errorMessage {
-                    Section { Text(error).foregroundStyle(AppColors.destructive).font(.caption) }
+
+                Section("Details") {
+                    HStack {
+                        Text("$").foregroundStyle(AppColors.secondaryText)
+                        TextField("Amount", text: $amount).keyboardType(.decimalPad)
+                        if parsedAmount > 0 {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(AppColors.success).font(.caption)
+                        }
+                    }
+                    DatePicker("Date", selection: $expenseDate, displayedComponents: .date)
+                        .tint(AppColors.accent)
+                    HStack {
+                        TextField("Merchant / Vendor (optional)", text: $merchant)
+                        if !merchant.isEmpty {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(AppColors.success).font(.caption)
+                        }
+                    }
+                    TextField("Notes (optional)", text: $notes)
+                }
+
+                if isSaving {
+                    Section {
+                        HStack {
+                            ProgressView().tint(AppColors.accent)
+                            Text("Saving…").foregroundStyle(AppColors.secondaryText)
+                        }
+                    }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(AppColors.background)
             .navigationTitle("Add Expense")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }.tint(AppColors.secondaryText)
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { Task { await save() } }
-                        .disabled(!canSave || isSaving || isUploadingPhoto)
+                        .disabled(!canSave || isSaving)
+                        .fontWeight(.semibold)
+                        .tint(AppColors.accent)
                 }
             }
             .onAppear {
@@ -207,55 +340,103 @@ struct AddExpenseView: View {
                     selectedVehicleId = first.vehicleId
                 }
             }
+            .alert("Save Failed", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(errorMessage) }
+            .confirmationDialog("Add Receipt Photo", isPresented: $showSourcePicker, titleVisibility: .visible) {
+                Button("Take Photo")            { showCamera  = true }
+                Button("Choose from Library")   { showLibrary = true }
+                Button("Cancel", role: .cancel) {}
+            }
+            .fullScreenCover(isPresented: $showCamera) {
+                CameraImagePicker(sourceType: .camera) { image in
+                    receiptImage = image
+                    Task { await scanReceipt(image) }
+                }
+            }
+            .fullScreenCover(isPresented: $showLibrary) {
+                CameraImagePicker(sourceType: .photoLibrary) { image in
+                    receiptImage = image
+                    Task { await scanReceipt(image) }
+                }
+            }
         }
     }
 
-    private var canSave: Bool { !selectedVehicleId.isEmpty && Double(amount) != nil }
-
-    private func loadPhoto(_ item: PhotosPickerItem?) async {
-        guard let item,
-              let data  = try? await item.loadTransferable(type: Data.self),
-              let image = UIImage(data: data) else { return }
-        receiptImage = image
+    private func scanReceipt(_ image: UIImage) async {
+        isScanning = true; scanBadge = nil
+        let result = await ReceiptScanner.scan(image)
+        if let v = result.amount, amount.isEmpty {
+            amount = v.trimmingCharacters(in: .whitespaces)
+                .replacingOccurrences(of: "$", with: "")
+                .replacingOccurrences(of: ",", with: "")
+        }
+        if let v = result.merchant, merchant.isEmpty { merchant = v }
+        if let v = result.date {
+            for format in ["MM/dd/yyyy", "M/d/yyyy", "MM-dd-yyyy", "MMMM d yyyy", "MMM d, yyyy"] {
+                let f = DateFormatter(); f.dateFormat = format
+                if let d = f.date(from: v) { expenseDate = d; break }
+            }
+        }
+        isScanning = false
+        var extracted: [String] = []
+        if result.amount   != nil { extracted.append("amount") }
+        if result.merchant != nil { extracted.append("merchant") }
+        if result.date     != nil { extracted.append("date") }
+        scanBadge = extracted.isEmpty ? "No data extracted" : "Scanned: \(extracted.joined(separator: ", "))"
     }
 
     private func save() async {
-        isSaving = true; errorMessage = nil
+        isSaving = true
         do {
             let body = CreateExpenseRequest(
-                vehicleId:   selectedVehicleId, tripId: nil,
+                vehicleId:   isVehicleExpense ? selectedVehicleId : nil,
+                tripId:      nil,
                 category:    category.rawValue,
-                amount:      Double(amount) ?? 0,
+                amount:      parsedAmount,
                 expenseDate: Self.df.string(from: expenseDate),
-                merchant:    merchant, notes: notes
+                merchant:    merchant,
+                notes:       notes
             )
             let created: Expense = try await api.post("expenses", body: body)
+            await onSaved()
+            dismiss()
 
-            if receiptImage != nil,
-               let authSvc = NetworkService.shared.authService {
-                isUploadingPhoto = true
-                let s3Key = "receipts/\(created.expenseId).jpg"
-                let _ = try await authSvc.idToken()
-                let updateBody = UpdateExpenseRequest(
-                    vehicleId:    selectedVehicleId, tripId: nil,
-                    category:     category.rawValue,
-                    amount:       Double(amount) ?? 0,
-                    expenseDate:  Self.df.string(from: expenseDate),
-                    merchant:     merchant, notes: notes,
-                    receiptS3Key: s3Key
-                )
-                let _: Expense = try await api.put("expenses/\(created.expenseId)", body: updateBody)
-                isUploadingPhoto = false
+            if let image = receiptImage {
+                Task {
+                    do {
+                        let s3Key = try await ReceiptUploader.upload(
+                            image:     image,
+                            expenseId: created.expenseId,
+                            api:       NetworkService.shared
+                        )
+                        let updateBody = UpdateExpenseRequest(
+                            vehicleId:    isVehicleExpense ? selectedVehicleId : nil,
+                            tripId:       nil,
+                            category:     category.rawValue,
+                            amount:       parsedAmount,
+                            expenseDate:  Self.df.string(from: expenseDate),
+                            merchant:     merchant,
+                            notes:        notes,
+                            receiptS3Key: s3Key
+                        )
+                        let _: Expense = try await NetworkService.shared.put(
+                            "expenses/\(created.expenseId)", body: updateBody
+                        )
+                    } catch { print("Receipt upload failed: \(error)") }
+                }
             }
-            await onSaved(); dismiss()
         } catch {
+            isSaving = false
             errorMessage = error.localizedDescription
-            isUploadingPhoto = false
+            showError    = true
+            return
         }
         isSaving = false
     }
 }
 
+// MARK: - Expense Detail
 struct ExpenseDetailView: View {
     let expense:     Expense
     let vehicleName: String
@@ -267,7 +448,7 @@ struct ExpenseDetailView: View {
                 LabeledContent("Category", value: expense.category.displayName)
                 LabeledContent("Amount",   value: expense.amountFormatted)
                 LabeledContent("Date",     value: expense.expenseDate)
-                LabeledContent("Vehicle",  value: vehicleName)
+                LabeledContent("Type",     value: expense.isVehicleExpense ? vehicleName : "General")
                 if !expense.merchant.isEmpty { LabeledContent("Merchant", value: expense.merchant) }
                 if !expense.notes.isEmpty    { LabeledContent("Notes",    value: expense.notes) }
             }
@@ -278,23 +459,24 @@ struct ExpenseDetailView: View {
                     if let merchant = ocr.merchant { LabeledContent("Merchant", value: merchant) }
                     ForEach(ocr.lineItems, id: \.description) { item in
                         HStack {
-                            Text(item.description).foregroundStyle(.secondary)
+                            Text(item.description).foregroundStyle(AppColors.secondaryText)
                             Spacer()
-                            Text(item.amount)
+                            Text(item.amount).foregroundStyle(AppColors.primary)
                         }
                         .font(.caption)
                     }
                 }
             } else if expense.ocrStatus == .pending {
                 Section {
-                    Label("Receipt is being processed…", systemImage: "arrow.triangle.2.circlepath")
-                        .foregroundStyle(.orange)
+                    Label("Processing receipt…", systemImage: "arrow.triangle.2.circlepath")
+                        .foregroundStyle(AppColors.warning)
                 }
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(AppColors.background)
         .navigationTitle(expense.category.displayName)
         .navigationBarTitleDisplayMode(.inline)
-        .background(AppColors.background)
     }
 }

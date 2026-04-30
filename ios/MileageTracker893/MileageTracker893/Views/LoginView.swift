@@ -13,29 +13,41 @@ struct LoginView: View {
         NavigationStack {
             ZStack {
                 AppColors.background.ignoresSafeArea()
+
                 VStack(spacing: 32) {
-                    VStack(spacing: 8) {
-                        Image(systemName: "car.fill")
-                            .font(.system(size: 56))
-                            .foregroundStyle(AppColors.primary)
+
+                    // ── Logo ──────────────────────────────────────────────────
+                    VStack(spacing: 10) {
+                        ZStack {
+                            Circle()
+                                .fill(AppColors.accent)
+                                .frame(width: 88, height: 88)
+                                .shadow(color: AppColors.accent.opacity(0.35), radius: 12, y: 6)
+                            Image(systemName: "car.fill")
+                                .font(.system(size: 40))
+                                .foregroundStyle(.white)
+                        }
+
                         Text("MileageTracker893")
-                            .font(.largeTitle.bold())
+                            .font(.title.bold())
                             .foregroundStyle(AppColors.primary)
+
                         Text("Track trips & expenses")
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColors.secondaryText)
                     }
                     .padding(.top, 60)
 
-                    VStack(spacing: 16) {
+                    // ── Form ──────────────────────────────────────────────────
+                    VStack(spacing: 14) {
                         TextField("Email", text: $email)
                             .keyboardType(.emailAddress)
                             .autocapitalization(.none)
                             .autocorrectionDisabled()
                             .padding()
-                            .background(Color.white)
-                            .cornerRadius(10)
-                            .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                            .background(AppColors.surface)
+                            .cornerRadius(12)
+                            .shadow(color: AppColors.shadowColor, radius: 4, y: 2)
 
                         HStack {
                             Group {
@@ -47,22 +59,27 @@ struct LoginView: View {
                                     SecureField("Password", text: $password)
                                 }
                             }
-                            Button { showPassword.toggle() } label: {
+                            Button {
+                                showPassword.toggle()
+                            } label: {
                                 Image(systemName: showPassword ? "eye.slash" : "eye")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColors.secondaryText)
                             }
                         }
                         .padding()
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .shadow(color: .black.opacity(0.06), radius: 4, y: 2)
+                        .background(AppColors.surface)
+                        .cornerRadius(12)
+                        .shadow(color: AppColors.shadowColor, radius: 4, y: 2)
 
                         if let error = auth.errorMessage {
-                            Text(error)
-                                .font(.caption)
-                                .foregroundStyle(AppColors.destructive)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 4)
+                            HStack {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                Text(error)
+                            }
+                            .font(.caption)
+                            .foregroundStyle(AppColors.destructive)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 4)
                         }
 
                         Button {
@@ -77,11 +94,13 @@ struct LoginView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(canSubmit ? AppColors.primary : Color.gray.opacity(0.4))
+                            .background(canSubmit ? AppColors.accent : AppColors.secondaryText.opacity(0.4))
                             .foregroundStyle(.white)
-                            .cornerRadius(10)
+                            .cornerRadius(12)
+                            .shadow(color: AppColors.accent.opacity(canSubmit ? 0.35 : 0), radius: 8, y: 4)
                         }
                         .disabled(!canSubmit)
+                        .animation(.easeInOut(duration: 0.2), value: canSubmit)
                     }
                     .padding(.horizontal, 28)
 

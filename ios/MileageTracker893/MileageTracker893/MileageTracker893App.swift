@@ -23,27 +23,38 @@ struct MileageTracker893App: App {
 
     private func applyAppearance() {
         let primary = UIColor(AppColors.primary)
+        let accent  = UIColor(AppColors.accent)
         let bg      = UIColor(AppColors.background)
+        let surface = UIColor(AppColors.surface)
 
+        // ── Navigation bar ────────────────────────────────────────────────────
         let nav = UINavigationBarAppearance()
         nav.configureWithOpaqueBackground()
         nav.backgroundColor          = bg
         nav.titleTextAttributes      = [.foregroundColor: primary]
         nav.largeTitleTextAttributes = [.foregroundColor: primary]
+        nav.shadowColor              = .clear
 
         UINavigationBar.appearance().standardAppearance   = nav
         UINavigationBar.appearance().scrollEdgeAppearance = nav
-        UINavigationBar.appearance().tintColor            = primary
-        UITabBar.appearance().tintColor                   = primary
-        UITabBar.appearance().backgroundColor             = bg
-        UITableView.appearance().backgroundColor          = bg
-    }
-}
+        UINavigationBar.appearance().compactAppearance    = nav
+        UINavigationBar.appearance().tintColor            = accent
 
-// MARK: - App color palette (one place, used everywhere)
-enum AppColors {
-    static let primary     = Color(red: 0.08, green: 0.20, blue: 0.35)
-    static let background  = Color(red: 0.97, green: 0.97, blue: 0.96)
-    static let accent      = Color(red: 0.07, green: 0.36, blue: 0.42)
-    static let destructive = Color.red
+        // ── Tab bar ───────────────────────────────────────────────────────────
+        let tab = UITabBarAppearance()
+        tab.configureWithOpaqueBackground()
+        tab.backgroundColor = surface
+        tab.stackedLayoutAppearance.selected.iconColor   = accent
+        tab.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: accent]
+        tab.stackedLayoutAppearance.normal.iconColor     = UIColor(AppColors.secondaryText)
+        tab.stackedLayoutAppearance.normal.titleTextAttributes  = [.foregroundColor: UIColor(AppColors.secondaryText)]
+
+        UITabBar.appearance().standardAppearance  = tab
+        UITabBar.appearance().scrollEdgeAppearance = tab
+        UITabBar.appearance().tintColor           = accent
+
+        // ── Table / List ──────────────────────────────────────────────────────
+        UITableView.appearance().backgroundColor       = bg
+        UITableViewCell.appearance().backgroundColor   = surface
+    }
 }

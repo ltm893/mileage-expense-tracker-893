@@ -6,25 +6,31 @@ import {
   UpdateCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from "crypto";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 
-const ddb   = DynamoDBDocumentClient.from(new DynamoDBClient({}));
-const TABLE = process.env.EXPENSES_TABLE!;
-const GSI   = "vehicleId-expenseDate-index";
+const ddb    = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const s3     = new S3Client({ region: process.env.AWS_ACCOUNT_REGION ?? "us-east-1" });
+const TABLE  = process.env.EXPENSES_TABLE!;
+const BUCKET = process.env.RECEIPTS_BUCKET!;
+const GSI    = "vehicleId-expenseDate-index";
 
-// Expense categories
-type Category = "fuel" | "maintenance" | "insurance" | "parking" | "tolls" | "other";
+type Category =
+  | "fuel" | "maintenance" | "insurance" | "parking" | "tolls"
+  | "meals" | "travel" | "lodging" | "groceries" | "home_supplies"
+  | "utilities" | "entertainment" | "medical" | "other";
 
 interface ExpenseBody {
-  vehicleId:    string;
-  tripId?:      string;       // optional — links expense to a specific trip
-  category:     Category;
-  amount:       number;       // in dollars
-  expenseDate:  string;       // ISO date "2026-04-28"
-  merchant?:    string;
-  notes?:       string;
-  receiptS3Key?: string;      // set by mobile app after S3 upload e.g. "receipts/{userId}/{expenseId}.jpg"
+  vehicleId?:    string | null;
+  tripId?:       string | null;
+  category:      Category;
+  amount:        number;
+  expenseDate:   string;
+  merchant?:     string;
+  notes?:        string;
+  receiptS3Key?: string | null;
 }
 
 export const handler = async (
@@ -33,10 +39,23 @@ export const handler = async (
   const userId    = event.requestContext.authorizer?.claims?.sub as string;
   const method    = event.httpMethod;
   const expenseId = event.pathParameters?.expenseId;
-
   const filterVehicleId = event.queryStringParameters?.vehicleId;
 
   try {
+    // ── GET /expenses/upload-url?expenseId=xxx ────────────────────────────────
+    // Returns a pre-signed S3 PUT URL the mobile app uses to upload receipt photos
+    if (method === "GET" && event.queryStringParameters?.uploadUrl === "1") {
+      const eid     = event.queryStringParameters?.expenseId ?? randomUUID();
+      const s3Key   = `receipts/${userId}/${eid}.jpg`;
+      const command = new PutObjectCommand({
+        Bucket:      BUCKET,
+        Key:         s3Key,
+        ContentType: "image/jpeg",
+      });
+      const url = await getSignedUrl(s3, command, { expiresIn: 300 }); // 5 min
+      return ok({ uploadUrl: url, s3Key });
+    }
+
     // ── GET /expenses ─────────────────────────────────────────────────────────
     if (method === "GET") {
       if (filterVehicleId) {
@@ -64,68 +83,75 @@ export const handler = async (
       return ok(result.Items ?? []);
     }
 
-    // ── POST /expenses — create expense record ────────────────────────────────
-    // The mobile app:
-    //   1. POSTs here → gets back expenseId
-    //   2. Uploads receipt to S3 at receipts/{userId}/{expenseId}.jpg
-    //   3. PUTs here with receiptS3Key to link the receipt
-    // OR skips steps 2-3 if there's no receipt.
-    // The OCR Lambda fires automatically when S3 upload completes.
+    // ── POST /expenses ────────────────────────────────────────────────────────
     if (method === "POST") {
       const body = JSON.parse(event.body ?? "{}") as ExpenseBody;
-      const item = {
+
+      const item: Record<string, unknown> = {
         userId,
         expenseId:    randomUUID(),
-        vehicleId:    body.vehicleId,
-        tripId:       body.tripId    ?? null,
+        tripId:       body.tripId      || undefined,
         category:     body.category,
         amount:       body.amount,
         expenseDate:  body.expenseDate ?? new Date().toISOString().split("T")[0],
-        merchant:     body.merchant  ?? "",
-        notes:        body.notes     ?? "",
-        receiptS3Key: body.receiptS3Key ?? null,
+        merchant:     body.merchant    ?? "",
+        notes:        body.notes       ?? "",
+        receiptS3Key: body.receiptS3Key || undefined,
         ocrStatus:    body.receiptS3Key ? "pending" : "none",
-        ocrData:      null,  // filled in by OCR Lambda after Textract runs
+        ocrData:      undefined,
         createdAt:    new Date().toISOString(),
         updatedAt:    new Date().toISOString(),
       };
+
+      if (body.vehicleId) {
+        item.vehicleId = body.vehicleId;
+      }
+
       await ddb.send(new PutCommand({ TableName: TABLE, Item: item }));
       return ok(item, 201);
     }
 
-    // ── PUT /expenses/{expenseId} — update expense (also used to attach receipt) ──
+    // ── PUT /expenses/{expenseId} ─────────────────────────────────────────────
     if (method === "PUT" && expenseId) {
       const body = JSON.parse(event.body ?? "{}") as Partial<ExpenseBody>;
+
+      let updateParts = [
+        "category = :cat",
+        "amount = :amt",
+        "expenseDate = :date",
+        "merchant = :merchant",
+        "notes = :notes",
+        "ocrStatus = :ocrStatus",
+        "updatedAt = :ts",
+      ];
+
+      const exprValues: Record<string, unknown> = {
+        ":cat":       body.category,
+        ":amt":       body.amount,
+        ":date":      body.expenseDate,
+        ":merchant":  body.merchant    ?? "",
+        ":notes":     body.notes       ?? "",
+        ":ocrStatus": body.receiptS3Key ? "pending" : "none",
+        ":ts":        new Date().toISOString(),
+      };
+
+      if (body.vehicleId) {
+        updateParts.push("vehicleId = :vid");
+        exprValues[":vid"] = body.vehicleId;
+      }
+
+      if (body.receiptS3Key) {
+        updateParts.push("receiptS3Key = :s3key");
+        exprValues[":s3key"] = body.receiptS3Key;
+      }
+
       const result = await ddb.send(
         new UpdateCommand({
           TableName:        TABLE,
           Key:              { userId, expenseId },
           ConditionExpression: "attribute_exists(expenseId)",
-          UpdateExpression: [
-            "SET vehicleId = :vid",
-            "tripId = :tid",
-            "category = :cat",
-            "amount = :amt",
-            "expenseDate = :date",
-            "merchant = :merchant",
-            "notes = :notes",
-            "receiptS3Key = :s3key",
-            "ocrStatus = :ocrStatus",
-            "updatedAt = :ts",
-          ].join(", "),
-          ExpressionAttributeValues: {
-            ":vid":       body.vehicleId,
-            ":tid":       body.tripId      ?? null,
-            ":cat":       body.category,
-            ":amt":       body.amount,
-            ":date":      body.expenseDate,
-            ":merchant":  body.merchant    ?? "",
-            ":notes":     body.notes       ?? "",
-            ":s3key":     body.receiptS3Key ?? null,
-            // If a receipt key was just attached, mark OCR as pending
-            ":ocrStatus": body.receiptS3Key ? "pending" : "none",
-            ":ts":        new Date().toISOString(),
-          },
+          UpdateExpression: "SET " + updateParts.join(", "),
+          ExpressionAttributeValues: exprValues,
           ReturnValues: "ALL_NEW",
         })
       );
@@ -159,13 +185,9 @@ const headers = {
 };
 
 const ok = (body: unknown, status = 200): APIGatewayProxyResult => ({
-  statusCode: status,
-  headers,
-  body: JSON.stringify(body),
+  statusCode: status, headers, body: JSON.stringify(body),
 });
 
 const errResponse = (status: number, message: string): APIGatewayProxyResult => ({
-  statusCode: status,
-  headers,
-  body: JSON.stringify({ error: message }),
+  statusCode: status, headers, body: JSON.stringify({ error: message }),
 });
