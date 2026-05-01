@@ -2,51 +2,101 @@
 
 A standalone add-on for [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893).
 
-Tracks vehicle mileage and expenses with receipt scanning via AWS Textract.
+Tracks vehicle mileage and expenses with GPS trip tracking, receipt photo scanning, and CSV export. iOS app built with SwiftUI + raw Cognito SRP auth (no Amplify).
 
-## Structure
+## Features
+
+- **Vehicles** — add, edit, delete vehicles with odometer tracking
+- **Trips** — GPS-tracked trips with live distance, odometer comparison, 3-step flow
+- **Expenses** — log expenses with category, receipt photo, on-device OCR auto-fill
+- **Receipt scanning** — Apple Vision framework extracts amount, date, merchant on-device; AWS Textract runs server-side for line items
+- **CSV export** — export all trips to CSV for mileage reimbursement / tax records
+- **Invite-only auth** — Cognito SRP, Keychain token storage, auto-refresh
+
+## What this deploys
 
 ```
-mileage-expense-tracker-893/
-├── backend/               ← CDK stack: DynamoDB, Lambda, API Gateway, S3
-│   ├── bin/app.ts         ← CDK entry point (reads base_outputs.json via env var)
-│   ├── lib/met-stack.ts   ← Stack definition
-│   ├── lambda/
-│   │   ├── vehicles/      ← CRUD: vehicles
-│   │   ├── trips/         ← CRUD: trips
-│   │   ├── expenses/      ← CRUD: expenses + presigned S3 upload URLs
-│   │   └── ocr/           ← S3 trigger → Textract receipt scanning
-│   └── scripts/deploy.sh  ← Deploy + write met_outputs.json
-├── ios/                   ← SwiftUI iOS app (coming soon)
-└── met_outputs.json       ← Written by deploy.sh (gitignored)
+MileageExpenseStack-{id}
+├── API Gateway              — REST API, Cognito-authorised
+├── Lambda: vehicles         — CRUD
+├── Lambda: trips            — CRUD
+├── Lambda: expenses         — CRUD + presigned S3 upload URLs
+├── Lambda: ocr              — S3 trigger → Textract receipt scanning
+├── DynamoDB: {id}-met-vehicles
+├── DynamoDB: {id}-met-trips
+├── DynamoDB: {id}-met-expenses
+├── S3: {id}-met-receipts    — receipt photo storage
+└── Cognito App Client       — on shared User Pool from base stack
 ```
+
+All resource names are prefixed with `{id}` derived from your base stack — no hardcoded names, no same-account collisions.
 
 ## Prerequisites
 
-1. Deploy [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893) first
-2. Note the path to its `base_outputs.json`
-3. AWS CLI configured, CDK bootstrapped, Node.js 20+
+1. Deploy [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893) first — note the path to its `base_outputs.json`
+2. AWS CLI configured, CDK bootstrapped, Node.js 20+
 
-## Deploy
+## Deploy backend
 
 ```bash
-# 1. Clone this repo
+# 1. Clone
 git clone https://github.com/ltm893/mileage-expense-tracker-893.git
 cd mileage-expense-tracker-893
 
-# 2. Point to your base stack outputs
-export BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json
-
-# 3. Deploy the backend
+# 2. Deploy backend
 cd backend
 chmod +x scripts/deploy.sh
-./scripts/deploy.sh
+BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
+  ./scripts/deploy.sh
+# → creates MileageExpenseStack-{id}
 # → writes met_outputs.json at repo root
 ```
 
-## API Endpoints
+The deploy script shows a summary of exactly what will be created before asking for confirmation.
 
-All endpoints require a Cognito JWT (`Authorization: Bearer <token>`).
+## Build iOS app
+
+1. Open `ios/MileageTracker893/MileageTracker893.xcodeproj` in Xcode
+2. Drag `met_outputs.json` from the repo root into the `MileageTracker893` group in Xcode
+   - Check "Copy items if needed"
+   - Confirm target membership is checked
+3. `⇧⌘K` clean, `⌘B` build, `⌘R` run
+
+## met_outputs.json
+
+Written to repo root by `deploy.sh`. Gitignored — never committed. A `met_outputs.example.json` is committed showing the schema.
+
+```json
+{
+  "version": "1",
+  "api":     { "aws_region": "...", "base_url": "https://..." },
+  "auth":    { "user_pool_id": "...", "user_pool_client_id": "...", "identity_pool_id": "..." },
+  "storage": { "receipts_bucket": "..." },
+  "tables":  { "vehicles": "...", "trips": "...", "expenses": "..." }
+}
+```
+
+## Creating a user
+
+```bash
+aws cognito-idp admin-create-user \
+  --user-pool-id <user_pool_id> \
+  --username user@example.com \
+  --temporary-password 'TempPass1!' \
+  --message-action SUPPRESS \
+  --region us-east-1
+
+aws cognito-idp admin-set-user-password \
+  --user-pool-id <user_pool_id> \
+  --username user@example.com \
+  --password 'PermPass1!' \
+  --permanent \
+  --region us-east-1
+```
+
+## API endpoints
+
+All endpoints require `Authorization: <Cognito ID token>`.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -54,21 +104,41 @@ All endpoints require a Cognito JWT (`Authorization: Bearer <token>`).
 | POST | `/vehicles` | Add vehicle |
 | PUT | `/vehicles/{vehicleId}` | Update vehicle |
 | DELETE | `/vehicles/{vehicleId}` | Delete vehicle |
-| GET | `/trips` | List trips (filter: `?vehicleId=`) |
+| GET | `/trips` | List trips |
 | POST | `/trips` | Log trip |
 | PUT | `/trips/{tripId}` | Update trip |
 | DELETE | `/trips/{tripId}` | Delete trip |
-| GET | `/expenses` | List expenses (filter: `?vehicleId=`) |
+| GET | `/expenses` | List expenses |
 | POST | `/expenses` | Log expense |
 | PUT | `/expenses/{expenseId}` | Update expense |
 | DELETE | `/expenses/{expenseId}` | Delete expense |
-| GET | `/expenses?uploadUrl=1` | Get presigned S3 URL for receipt upload |
+| GET | `/expenses?uploadUrl=1&expenseId=` | Get presigned S3 URL for receipt upload |
 
-## Receipt OCR
+## Structure
 
-Upload a receipt image to S3 at `receipts/{userId}/{expenseId}.jpg` — Textract automatically extracts total, date, merchant, and line items, writing results back to the expense record.
+```
+mileage-expense-tracker-893/
+├── backend/
+│   ├── bin/app.ts              ← CDK entry — derives idPrefix from base_outputs.json
+│   ├── lib/met-stack.ts        ← CDK stack — all names use idPrefix
+│   ├── lib/base-outputs.ts     ← TypeScript type for base_outputs.json
+│   ├── lambda/
+│   │   ├── vehicles/index.ts
+│   │   ├── trips/index.ts
+│   │   ├── expenses/index.ts
+│   │   └── ocr/index.ts
+│   └── scripts/deploy.sh
+├── ios/MileageTracker893/
+│   └── MileageTracker893/
+│       ├── Config/             ← AppConfig (reads met_outputs.json), AppColors
+│       ├── Models/             ← Vehicle, Trip, Expense — safe Codable decoding
+│       ├── Services/           ← Auth, Network, Location, Camera, OCR, Upload
+│       └── Views/              ← Login, Vehicles, Trips, Expenses, Settings
+├── met_outputs.json            ← gitignored — generated by deploy.sh
+└── met_outputs.example.json    ← committed — shows schema for forkers
+```
 
-## Estimated AWS Costs
+## Estimated AWS costs
 
 | Service | Est. cost at low usage |
 |---------|------------------------|
@@ -77,3 +147,18 @@ Upload a receipt image to S3 at `receipts/{userId}/{expenseId}.jpg` — Textract
 | API Gateway | $0 (free tier) |
 | S3 | ~$0.023/GB/month |
 | Textract | $0.0015/page |
+
+## Cleanup
+
+```bash
+# Destroy backend stack (DynamoDB tables + S3 bucket are retained)
+cd backend
+BASE_OUTPUTS_PATH=/path/to/base_outputs.json \
+  npx cdk destroy MileageExpenseStack-{id}
+
+# Delete retained resources
+aws s3 rb s3://{id}-met-receipts --force
+aws dynamodb delete-table --table-name {id}-met-vehicles --region us-east-1
+aws dynamodb delete-table --table-name {id}-met-trips --region us-east-1
+aws dynamodb delete-table --table-name {id}-met-expenses --region us-east-1
+```
