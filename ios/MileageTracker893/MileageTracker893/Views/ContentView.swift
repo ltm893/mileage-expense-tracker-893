@@ -16,7 +16,7 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Main tab bar (Trips - Expenses - Vehicles - Settings)
+// MARK: - Main tab bar
 struct MainTabView: View {
     var body: some View {
         TabView {
@@ -30,33 +30,5 @@ struct MainTabView: View {
                 .tabItem { Label("Settings", systemImage: "gearshape.fill") }
         }
         .tint(AppColors.accent)
-    }
-}
-
-// MARK: - Settings
-struct SettingsView: View {
-    @EnvironmentObject var auth: AuthService
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Button {
-                        auth.signOut()
-                    } label: {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                                .foregroundStyle(AppColors.destructive)
-                            Text("Sign Out")
-                                .foregroundStyle(AppColors.destructive)
-                        }
-                    }
-                }
-            }
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(AppColors.background)
-            .navigationTitle("Settings")
-        }
     }
 }

@@ -1,0 +1,23 @@
+{
+  "_instructions": "Copy this file to met_outputs.json and fill in your values after deploying the backend. This file is gitignored — never commit your real values.",
+  "version": "1",
+  "api": {
+    "aws_region": "us-east-1",
+    "base_url":   "https://YOUR_API_ID.execute-api.us-east-1.amazonaws.com/prod/"
+  },
+  "auth": {
+    "aws_region":          "us-east-1",
+    "user_pool_id":        "us-east-1_XXXXXXXXX",
+    "user_pool_client_id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "identity_pool_id":    "us-east-1:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+  },
+  "storage": {
+    "aws_region":      "us-east-1",
+    "receipts_bucket": "your-id-here-receipts"
+  },
+  "tables": {
+    "vehicles": "your-id-here-vehicles",
+    "trips":    "your-id-here-trips",
+    "expenses": "your-id-here-expenses"
+  }
+}

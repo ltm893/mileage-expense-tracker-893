@@ -13,6 +13,20 @@ struct Vehicle: Codable, Identifiable {
     let createdAt:       String
     var updatedAt:       String
     var id: String { vehicleId }
+
+    // Safe decoding — backend may omit defaulted fields
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId          = try c.decode(String.self, forKey: .userId)
+        vehicleId       = try c.decode(String.self, forKey: .vehicleId)
+        name            = try c.decodeIfPresent(String.self, forKey: .name)            ?? ""
+        make            = try c.decodeIfPresent(String.self, forKey: .make)            ?? ""
+        model           = try c.decodeIfPresent(String.self, forKey: .model)           ?? ""
+        year            = try c.decodeIfPresent(Int.self,    forKey: .year)            ?? 0
+        currentOdometer = try c.decodeIfPresent(Double.self, forKey: .currentOdometer) ?? 0
+        createdAt       = try c.decodeIfPresent(String.self, forKey: .createdAt)       ?? ""
+        updatedAt       = try c.decodeIfPresent(String.self, forKey: .updatedAt)       ?? ""
+    }
 }
 
 // MARK: - Trip
@@ -42,6 +56,23 @@ struct Trip: Codable, Identifiable {
                       odometerDistance, gpsDistance)
     }
     var wasGPSTracked: Bool { gpsDistance > 0 }
+
+    // Safe decoding — backend may omit optional/defaulted fields on older records
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId           = try c.decode(String.self, forKey: .userId)
+        tripId           = try c.decode(String.self, forKey: .tripId)
+        vehicleId        = try c.decodeIfPresent(String.self, forKey: .vehicleId)        ?? ""
+        startOdometer    = try c.decodeIfPresent(Double.self, forKey: .startOdometer)    ?? 0
+        endOdometer      = try c.decodeIfPresent(Double.self, forKey: .endOdometer)      ?? 0
+        odometerDistance = try c.decodeIfPresent(Double.self, forKey: .odometerDistance) ?? 0
+        gpsDistance      = try c.decodeIfPresent(Double.self, forKey: .gpsDistance)      ?? 0
+        tripDate         = try c.decodeIfPresent(String.self, forKey: .tripDate)         ?? ""
+        purpose          = try c.decodeIfPresent(String.self, forKey: .purpose)          ?? ""
+        notes            = try c.decodeIfPresent(String.self, forKey: .notes)            ?? ""
+        createdAt        = try c.decodeIfPresent(String.self, forKey: .createdAt)        ?? ""
+        updatedAt        = try c.decodeIfPresent(String.self, forKey: .updatedAt)        ?? ""
+    }
 }
 
 // MARK: - Expense
@@ -64,24 +95,39 @@ struct Expense: Codable, Identifiable {
     var id: String { expenseId }
     var amountFormatted: String { String(format: "$%.2f", amount) }
     var isVehicleExpense: Bool { vehicleId != nil }
+
+    // Safe decoding — backend omits nil fields entirely (DynamoDB undefined → missing from JSON)
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId       = try c.decode(String.self, forKey: .userId)
+        expenseId    = try c.decode(String.self, forKey: .expenseId)
+        vehicleId    = try c.decodeIfPresent(String.self,          forKey: .vehicleId)
+        tripId       = try c.decodeIfPresent(String.self,          forKey: .tripId)
+        category     = try c.decodeIfPresent(ExpenseCategory.self, forKey: .category)   ?? .other
+        amount       = try c.decodeIfPresent(Double.self,          forKey: .amount)      ?? 0
+        expenseDate  = try c.decodeIfPresent(String.self,          forKey: .expenseDate) ?? ""
+        merchant     = try c.decodeIfPresent(String.self,          forKey: .merchant)    ?? ""
+        notes        = try c.decodeIfPresent(String.self,          forKey: .notes)       ?? ""
+        receiptS3Key = try c.decodeIfPresent(String.self,          forKey: .receiptS3Key)
+        ocrStatus    = try c.decodeIfPresent(OCRStatus.self,       forKey: .ocrStatus)   ?? .none
+        ocrData      = try c.decodeIfPresent(OCRData.self,         forKey: .ocrData)
+        createdAt    = try c.decodeIfPresent(String.self,          forKey: .createdAt)   ?? ""
+        updatedAt    = try c.decodeIfPresent(String.self,          forKey: .updatedAt)   ?? ""
+    }
 }
 
 // MARK: - Expense Category
 enum ExpenseCategory: String, Codable, CaseIterable {
-
-    // Vehicle expenses
     case fuel          = "fuel"
     case maintenance   = "maintenance"
     case insurance     = "insurance"
     case parking       = "parking"
     case tolls         = "tolls"
-
-    // General expenses
     case meals         = "meals"
     case travel        = "travel"
     case lodging       = "lodging"
-    case groceries     = "groceries"      // was "supplies"
-    case homeSupplies  = "home_supplies"  // new
+    case groceries     = "groceries"
+    case homeSupplies  = "home_supplies"
     case utilities     = "utilities"
     case entertainment = "entertainment"
     case medical       = "medical"
@@ -128,7 +174,6 @@ enum ExpenseCategory: String, Codable, CaseIterable {
     static var vehicleCategories: [ExpenseCategory] {
         [.fuel, .maintenance, .insurance, .parking, .tolls]
     }
-
     static var generalCategories: [ExpenseCategory] {
         [.meals, .groceries, .homeSupplies, .travel, .lodging,
          .utilities, .entertainment, .medical, .other]
@@ -150,9 +195,19 @@ struct OCRData: Codable {
     var merchant:  String?
     var lineItems: [LineItem]
     var rawFields: [String: String]
+
     struct LineItem: Codable {
         var description: String
         var amount:      String
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        total     = try c.decodeIfPresent(String.self,     forKey: .total)
+        date      = try c.decodeIfPresent(String.self,     forKey: .date)
+        merchant  = try c.decodeIfPresent(String.self,     forKey: .merchant)
+        lineItems = try c.decodeIfPresent([LineItem].self,       forKey: .lineItems) ?? []
+        rawFields = try c.decodeIfPresent([String: String].self, forKey: .rawFields) ?? [:]
     }
 }
 
