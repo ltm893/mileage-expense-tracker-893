@@ -1,17 +1,4 @@
 // backend/lib/met-stack.ts
-// Mileage Expense Tracker — standalone CDK stack.
-// Consumes base_outputs.json from cognito-s3-stack-893 via BASE_OUTPUTS_PATH.
-// Deploys:
-//   - Cognito App Client on shared User Pool
-//   - Cognito Group: mileage-access
-//   - Identity Pool for direct S3 receipt uploads
-//   - S3 receipts bucket
-//   - DynamoDB: met-vehicles, met-trips, met-expenses
-//   - Lambda: vehicles, trips, expenses, ocr
-//   - API Gateway (Cognito-authorised)
-//   - Textract IAM for OCR Lambda
-//   - Writes met_outputs.json at repo root via deploy.sh
-
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
@@ -26,37 +13,34 @@ import * as path from "path";
 import { BaseOutputs } from "./base-outputs";
 
 export interface MileageExpenseStackProps extends cdk.StackProps {
-  base: BaseOutputs;
+  base:     BaseOutputs;
+  idPrefix: string;   // e.g. "test893" or "forktest2" — drives all resource names
 }
 
 export class MileageExpenseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: MileageExpenseStackProps) {
     super(scope, id, props);
 
-    const { base } = props;
+    const { base, idPrefix } = props;
 
-    // ── Import shared User Pool from base ─────────────────────────────────────
     const userPool = cognito.UserPool.fromUserPoolId(
       this, "SharedUserPool", base.auth.user_pool_id
     );
 
-    // ── New App Client ────────────────────────────────────────────────────────
     const appClient = userPool.addClient("MileageExpenseClient", {
-      userPoolClientName: "mileage-expense-client",
+      userPoolClientName: `${idPrefix}-met-client`,
       authFlows: { userPassword: true, userSrp: true, adminUserPassword: true },
       preventUserExistenceErrors: true,
     });
 
-    // ── Cognito Group ─────────────────────────────────────────────────────────
     new cognito.CfnUserPoolGroup(this, "MileageAccessGroup", {
-      groupName:   "mileage-access",
+      groupName:   `${idPrefix}-mileage-access`,
       userPoolId:  userPool.userPoolId,
       description: "Users with access to the mileage expense tracker",
     });
 
-    // ── Identity Pool for direct S3 receipt uploads ───────────────────────────
     const identityPool = new cognito.CfnIdentityPool(this, "METIdentityPool", {
-      identityPoolName:               "mileage_expense_identity_pool",
+      identityPoolName:               `${idPrefix}_met_identity_pool`,
       allowUnauthenticatedIdentities: false,
       cognitoIdentityProviders: [{
         clientId:     appClient.userPoolClientId,
@@ -64,9 +48,8 @@ export class MileageExpenseStack extends cdk.Stack {
       }],
     });
 
-    // ── S3 Receipts Bucket ────────────────────────────────────────────────────
     const receiptsBucket = new s3.Bucket(this, "ReceiptsBucket", {
-      bucketName:        `${base.auth.user_pool_id.split("_")[1].toLowerCase()}-met-receipts`,
+      bucketName:        `${idPrefix}-met-receipts`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       removalPolicy:     cdk.RemovalPolicy.RETAIN,
       cors: [{
@@ -78,9 +61,8 @@ export class MileageExpenseStack extends cdk.Stack {
       }],
     });
 
-    // ── DynamoDB Tables ───────────────────────────────────────────────────────
     const vehiclesTable = new dynamodb.Table(this, "VehiclesTable", {
-      tableName:     "met-vehicles",
+      tableName:     `${idPrefix}-met-vehicles`,
       partitionKey:  { name: "userId",    type: dynamodb.AttributeType.STRING },
       sortKey:       { name: "vehicleId", type: dynamodb.AttributeType.STRING },
       billingMode:   dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -88,7 +70,7 @@ export class MileageExpenseStack extends cdk.Stack {
     });
 
     const tripsTable = new dynamodb.Table(this, "TripsTable", {
-      tableName:     "met-trips",
+      tableName:     `${idPrefix}-met-trips`,
       partitionKey:  { name: "userId", type: dynamodb.AttributeType.STRING },
       sortKey:       { name: "tripId", type: dynamodb.AttributeType.STRING },
       billingMode:   dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -102,7 +84,7 @@ export class MileageExpenseStack extends cdk.Stack {
     });
 
     const expensesTable = new dynamodb.Table(this, "ExpensesTable", {
-      tableName:     "met-expenses",
+      tableName:     `${idPrefix}-met-expenses`,
       partitionKey:  { name: "userId",    type: dynamodb.AttributeType.STRING },
       sortKey:       { name: "expenseId", type: dynamodb.AttributeType.STRING },
       billingMode:   dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -115,7 +97,6 @@ export class MileageExpenseStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // ── Lambda factory ────────────────────────────────────────────────────────
     const commonEnv: Record<string, string> = {
       VEHICLES_TABLE:     vehiclesTable.tableName,
       TRIPS_TABLE:        tripsTable.tableName,
@@ -144,7 +125,6 @@ export class MileageExpenseStack extends cdk.Stack {
     const expensesLambda = makeLambda("ExpensesLambda", path.join(__dirname, "../lambda/expenses/index.ts"));
     const ocrLambda      = makeLambda("OCRLambda",      path.join(__dirname, "../lambda/ocr/index.ts"), 30);
 
-    // ── IAM grants ───────────────────────────────────────────────────────────
     [vehiclesLambda, tripsLambda, expensesLambda].forEach(fn => {
       vehiclesTable.grantReadWriteData(fn);
       tripsTable.grantReadWriteData(fn);
@@ -165,7 +145,6 @@ export class MileageExpenseStack extends cdk.Stack {
       { prefix: "receipts/" }
     );
 
-    // ── Identity Pool auth role ───────────────────────────────────────────────
     const authRole = new iam.Role(this, "METAuthRole", {
       assumedBy: new iam.FederatedPrincipal("cognito-identity.amazonaws.com", {
         StringEquals: { "cognito-identity.amazonaws.com:aud": identityPool.ref },
@@ -181,9 +160,8 @@ export class MileageExpenseStack extends cdk.Stack {
       roles: { authenticated: authRole.roleArn },
     });
 
-    // ── API Gateway ───────────────────────────────────────────────────────────
     const api = new apigateway.RestApi(this, "METAPI", {
-      restApiName: "mileage-expense-api",
+      restApiName: `${idPrefix}-mileage-expense-api`,
       defaultCorsPreflightOptions: {
         allowOrigins: apigateway.Cors.ALL_ORIGINS,
         allowMethods: apigateway.Cors.ALL_METHODS,
@@ -220,14 +198,13 @@ export class MileageExpenseStack extends cdk.Stack {
     expense.addMethod("PUT",    new apigateway.LambdaIntegration(expensesLambda), auth);
     expense.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), auth);
 
-    // ── Outputs ───────────────────────────────────────────────────────────────
-    new cdk.CfnOutput(this, "ApiUrlOutput",        { value: api.url,                    exportName: "METApiUrl" });
-    new cdk.CfnOutput(this, "UserPoolIdOutput",     { value: userPool.userPoolId,        exportName: "METUserPoolId" });
-    new cdk.CfnOutput(this, "AppClientIdOutput",    { value: appClient.userPoolClientId, exportName: "METAppClientId" });
-    new cdk.CfnOutput(this, "IdentityPoolIdOutput", { value: identityPool.ref,           exportName: "METIdentityPoolId" });
-    new cdk.CfnOutput(this, "ReceiptsBucketOutput", { value: receiptsBucket.bucketName,  exportName: "METReceiptsBucket" });
-    new cdk.CfnOutput(this, "VehiclesTableOutput",  { value: vehiclesTable.tableName,    exportName: "METVehiclesTable" });
-    new cdk.CfnOutput(this, "TripsTableOutput",     { value: tripsTable.tableName,       exportName: "METTripsTable" });
-    new cdk.CfnOutput(this, "ExpensesTableOutput",  { value: expensesTable.tableName,    exportName: "METExpensesTable" });
+    new cdk.CfnOutput(this, "METApiUrl",        { value: api.url });
+    new cdk.CfnOutput(this, "METUserPoolId",     { value: userPool.userPoolId });
+    new cdk.CfnOutput(this, "METAppClientId",    { value: appClient.userPoolClientId });
+    new cdk.CfnOutput(this, "METIdentityPoolId", { value: identityPool.ref });
+    new cdk.CfnOutput(this, "METReceiptsBucket", { value: receiptsBucket.bucketName });
+    new cdk.CfnOutput(this, "METVehiclesTable",  { value: vehiclesTable.tableName });
+    new cdk.CfnOutput(this, "METTripsTable",     { value: tripsTable.tableName });
+    new cdk.CfnOutput(this, "METExpensesTable",  { value: expensesTable.tableName });
   }
 }

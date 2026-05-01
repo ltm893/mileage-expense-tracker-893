@@ -5,13 +5,9 @@
 #
 # Usage:
 #   BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json ./scripts/deploy.sh
-#
-# Or set it in your shell profile:
-#   export BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json
 
 set -e
 
-STACK_NAME="MileageExpenseStack"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
@@ -24,29 +20,37 @@ echo ""
 # ── Validate BASE_OUTPUTS_PATH ────────────────────────────────────────────────
 if [ -z "$BASE_OUTPUTS_PATH" ]; then
   echo "  ❌ BASE_OUTPUTS_PATH is not set."
-  echo ""
-  echo "     Set it to the base_outputs.json from your cognito-s3-stack-893 deployment:"
-  echo "     export BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json"
-  echo ""
+  echo "     Example:"
+  echo "       BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json ./scripts/deploy.sh"
   exit 1
 fi
 
 if [ ! -f "$BASE_OUTPUTS_PATH" ]; then
   echo "  ❌ base_outputs.json not found at: $BASE_OUTPUTS_PATH"
-  echo "     Deploy the base stack first: cd cognito-s3-stack-893/base && ./scripts/deploy.sh"
-  echo ""
+  echo "     Deploy the base stack first."
   exit 1
 fi
 
-AWS_REGION=$(node -e "const b=require('${BASE_OUTPUTS_PATH}'); console.log(b.aws_region)" 2>/dev/null || echo "us-east-1")
+# ── Derive id prefix and region from base_outputs.json via grep ───────────────
+PUBLIC_BUCKET=$(grep -E '"public_bucket"' "$BASE_OUTPUTS_PATH" | sed 's/.*"\(.*\)".*/\1/')
+ID_PREFIX="${PUBLIC_BUCKET%-public}"
+AWS_REGION=$(grep -E '"aws_region"' "$BASE_OUTPUTS_PATH" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+STACK_NAME="MileageExpenseStack-${ID_PREFIX}"
 
-echo "  Stack:     $STACK_NAME"
-echo "  Region:    $AWS_REGION"
-echo "  Base from: $BASE_OUTPUTS_PATH"
+echo "  Stack:         $STACK_NAME"
+echo "  Region:        $AWS_REGION"
+echo "  ID prefix:     $ID_PREFIX"
+echo "  Base from:     $BASE_OUTPUTS_PATH"
+echo ""
+echo "  AWS resources that will be created:"
+echo "    S3:       ${ID_PREFIX}-met-receipts"
+echo "    DynamoDB: ${ID_PREFIX}-met-vehicles, ${ID_PREFIX}-met-trips, ${ID_PREFIX}-met-expenses"
+echo "    API:      ${ID_PREFIX}-mileage-expense-api"
 echo ""
 read -p "  Proceed? (y/n): " CONFIRM
 if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then echo "  Cancelled."; exit 0; fi
 
+# ── Install + deploy ──────────────────────────────────────────────────────────
 cd "$REPO_ROOT"
 [ ! -d "node_modules" ] && npm install
 
@@ -96,9 +100,14 @@ EOF
 
 echo ""
 echo "  ✅ met_outputs.json written to repo root"
+echo ""
+echo "  ────────────────────────────────────────────────────"
 echo "  API URL:         $API_URL"
 echo "  User Pool:       $USER_POOL_ID"
 echo "  App Client:      $APP_CLIENT_ID"
 echo "  Identity Pool:   $IDENTITY_POOL_ID"
 echo "  Receipts Bucket: $RECEIPTS_BUCKET"
+echo "  ────────────────────────────────────────────────────"
+echo ""
+echo "  Next: copy met_outputs.json into your Xcode project and build."
 echo ""
