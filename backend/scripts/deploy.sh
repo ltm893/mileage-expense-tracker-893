@@ -9,7 +9,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BACKEND_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+REPO_ROOT="$(cd "${BACKEND_DIR}/.." && pwd)"
 
 echo ""
 echo "╔══════════════════════════════════════════════╗"
@@ -51,7 +52,7 @@ read -p "  Proceed? (y/n): " CONFIRM
 if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then echo "  Cancelled."; exit 0; fi
 
 # ── Install + deploy ──────────────────────────────────────────────────────────
-cd "$REPO_ROOT"
+cd "$BACKEND_DIR"
 [ ! -d "node_modules" ] && npm install
 
 echo ""
