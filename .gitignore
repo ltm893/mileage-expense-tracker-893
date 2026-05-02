@@ -15,6 +15,7 @@ ios/**/met_outputs.json
 # Xcode / iOS
 ios/*.xcodeproj/xcuserdata/
 ios/**/*.xcodeproj/xcuserdata/
+ios/**/*.xcworkspace/xcuserdata/
 ios/DerivedData/
 ios/**/*.ipa
 ios/*.ipa
