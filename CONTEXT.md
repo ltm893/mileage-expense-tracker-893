@@ -2,7 +2,7 @@
 # Read this first at the start of every session.
 
 ## What this repo is
-Standalone add-on for cognito-s3-stack-893. Tracks vehicle mileage and expenses with GPS trip tracking, receipt OCR scanning, and CSV export.
+Standalone add-on for cognito-s3-stack-893. Tracks vehicle mileage and expenses with GPS trip tracking, receipt OCR scanning, and CSV export. iOS app display name: **MilesExpenses**.
 
 ## Architecture decisions
 - **Auth**: Cognito from shared base stack — raw URLSession + Cognito SRP, no Amplify
@@ -37,6 +37,7 @@ Standalone add-on for cognito-s3-stack-893. Tracks vehicle mileage and expenses 
 
 ## iOS status ✅ Complete
 SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
+Display name: `MilesExpenses` (set via `CFBundleDisplayName` in Info.plist)
 
 ### Files
 - `Config/AppConfig.swift` — loads met_outputs.json from bundle, zero hardcoded values
@@ -48,23 +49,40 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 - `Services/CameraImagePicker.swift` — camera + photo library
 - `Services/ReceiptScanner.swift` — Vision framework OCR (amount, date, merchant)
 - `Services/ReceiptUploader.swift` — presigned S3 PUT
-- `Views/ContentView.swift` — auth gate, tab bar
+- `Views/ContentView.swift` — auth gate, tab bar (Summary / Trips / Expenses / Vehicles / Settings)
 - `Views/LoginView.swift` — Cognito SRP login
 - `Views/VehiclesView.swift` — list, add, edit, delete
-- `Views/TripsView.swift` — list, add (GPS + odometer 3-step), delete
-- `Views/ExpensesView.swift` — list, add (receipt OCR), edit, delete
-- `Views/SummaryView.swift` — dashboard stats + date-range filter + CSV export (see below)
+- `Views/TripsView.swift` — list (tap to edit sheet, swipe to delete), add with GPS/Odometer/Both mode picker
+- `Views/ExpensesView.swift` — list (tap to edit sheet, swipe to delete), add with receipt OCR
+- `Views/SummaryView.swift` — dashboard stats + date-range filter + CSV export
 - `Views/SettingsView.swift` — app info, sign out
+
+## TripsView ✅ Complete (updated 2026-05-02)
+- `TrackingMode` enum: GPS / Odometer / Both — shown as tappable cards on step 1
+- GPS mode: live CoreLocation tracking, skip odometer fields
+- Odometer mode: start + end reading, skip GPS step, manual date picker
+- Both mode: GPS tracking + odometer fields + comparison section
+- List rows: compact — date, miles, purpose (if set) only
+- Tap row → sheet with read view + Edit button → inline edit → Save/Cancel
+- Swipe to delete
+- `TripDetailView` — read/edit all fields: date, vehicle, purpose, notes, odometer start/end, GPS distance
 
 ## SummaryView ✅ Complete (updated 2026-05-02)
 - `DateRangeFilter` enum: This Month / Last 30 Days / Last 90 Days / This Year / All Time
-- Horizontal pill selector at top of screen to switch filter — updates all cards reactively
+- Horizontal pill selector — updates all cards reactively, no extra API call
 - Mileage card: total miles, trip count, avg mi/trip, per-vehicle bar chart
 - Expenses card: total / vehicle / general pills, by-category bar chart
 - Empty-state messages when no data in selected period
-- Export card: exports trips, expenses, or combined CSV for the active filter period
+- Export card: trips, expenses, or combined CSV for the active filter period
 - Filenames include period slug (e.g. `trips_this_month_2026-05-02.csv`)
-- `ShareSheet` (`UIViewControllerRepresentable`) included in this file — no separate file needed
+- `ShareSheet` (`UIViewControllerRepresentable`) included in this file
+
+## App Icon ✅ Complete (2026-05-02)
+- Speedometer gauge design — navy background, teal arc, amber needle, no text
+- Source SVG: `Assets.xcassets/AppIcon.appiconset/met_icon_source.svg`
+- PNGs generated via `rsvg-convert` for all required sizes (20→1024)
+- `Contents.json` wired to `icon_1024.png` for all three slots (light / dark / tinted)
+- Regenerate PNGs: `for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do rsvg-convert -w $size -h $size "$SVG" -o "$OUT/icon_${size}.png"; done`
 
 ## Fork test — COMPLETE ✅
 - Deployed `CognitoS3BaseStack-forktest2` + `MileageExpenseStack-forktest2` on same AWS account
@@ -77,7 +95,7 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 - `deploy.sh` REPO_ROOT — fixed to `${BACKEND_DIR}/..` (was resolving to `backend/` not repo root)
 - Stack + resource names — all derived from idPrefix, nothing hardcoded
 - Deploy scripts — config read via grep not node -e, pre-confirmation resource summary added
-- `SummaryView.swift` — added missing `ShareSheet` wrapper + `DateRangeFilter`
+- `SummaryView.swift` — added missing `import Combine`, `ShareSheet` wrapper, `DateRangeFilter`
 
 ## For forkers
 1. Fork + clone `cognito-s3-stack-893`, set `config.ts`, run `deploy.sh` → `base_outputs.json`
@@ -90,4 +108,4 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 
 ## Next session — start here
 1. Read this file
-2. SummaryView complete — next project is `music-player-893`
+2. Project is complete and pushed to `dev` — next project is `music-player-893`
