@@ -21,3 +21,5 @@ ios/*.ipa
 
 # Dev scripts
 git-push-dev.sh
+create-issues.sh
+delete-issues.sh
