@@ -20,6 +20,8 @@ struct ContentView: View {
 struct MainTabView: View {
     var body: some View {
         TabView {
+            SummaryView()
+                .tabItem { Label("Summary", systemImage: "chart.bar.fill") }
             TripsView()
                 .tabItem { Label("Trips", systemImage: "map.fill") }
             ExpensesView()

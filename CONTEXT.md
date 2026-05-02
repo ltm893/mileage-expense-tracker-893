@@ -53,7 +53,18 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 - `Views/VehiclesView.swift` — list, add, edit, delete
 - `Views/TripsView.swift` — list, add (GPS + odometer 3-step), delete
 - `Views/ExpensesView.swift` — list, add (receipt OCR), edit, delete
-- `Views/SettingsView.swift` — CSV export, app info, sign out
+- `Views/SummaryView.swift` — dashboard stats + date-range filter + CSV export (see below)
+- `Views/SettingsView.swift` — app info, sign out
+
+## SummaryView ✅ Complete (updated 2026-05-02)
+- `DateRangeFilter` enum: This Month / Last 30 Days / Last 90 Days / This Year / All Time
+- Horizontal pill selector at top of screen to switch filter — updates all cards reactively
+- Mileage card: total miles, trip count, avg mi/trip, per-vehicle bar chart
+- Expenses card: total / vehicle / general pills, by-category bar chart
+- Empty-state messages when no data in selected period
+- Export card: exports trips, expenses, or combined CSV for the active filter period
+- Filenames include period slug (e.g. `trips_this_month_2026-05-02.csv`)
+- `ShareSheet` (`UIViewControllerRepresentable`) included in this file — no separate file needed
 
 ## Fork test — COMPLETE ✅
 - Deployed `CognitoS3BaseStack-forktest2` + `MileageExpenseStack-forktest2` on same AWS account
@@ -61,11 +72,12 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 - Proved zero-collision add-on pattern works end-to-end
 - forktest2 stacks destroyed after test
 
-## Known fixes applied this session
+## Known fixes applied
 - `Models.swift` — `decodeIfPresent` on all fields — DynamoDB omits undefined fields, Swift default Codable throws
 - `deploy.sh` REPO_ROOT — fixed to `${BACKEND_DIR}/..` (was resolving to `backend/` not repo root)
 - Stack + resource names — all derived from idPrefix, nothing hardcoded
 - Deploy scripts — config read via grep not node -e, pre-confirmation resource summary added
+- `SummaryView.swift` — added missing `ShareSheet` wrapper + `DateRangeFilter`
 
 ## For forkers
 1. Fork + clone `cognito-s3-stack-893`, set `config.ts`, run `deploy.sh` → `base_outputs.json`
@@ -78,4 +90,4 @@ SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
 
 ## Next session — start here
 1. Read this file
-2. Project is complete — next is `music-player-893`
+2. SummaryView complete — next project is `music-player-893`
