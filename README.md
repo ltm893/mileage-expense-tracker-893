@@ -1,15 +1,15 @@
 # mileage-expense-tracker-893
 
-A standalone add-on for [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893).
+A standalone, forkable mileage and expense tracker. Deploy your own AWS backend, build the iOS app against it. No dependency on any other repo required — but compatible with [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893) if you want a shared auth base.
 
-Tracks vehicle mileage and expenses with GPS trip tracking, receipt photo scanning, and CSV export. iOS app name **MilesExpenses**, built with SwiftUI + raw Cognito SRP auth (no Amplify).
+iOS app name: **MilesExpenses**. Built with SwiftUI + raw Cognito auth (no Amplify).
 
 ## Features
 
 - **Vehicles** — add, edit, delete vehicles with odometer tracking
-- **Trips** — choose GPS, odometer, or both tracking modes; live GPS distance; tap to edit; swipe to delete
+- **Trips** — GPS, odometer, or both tracking modes; live GPS distance; tap to edit; swipe to delete
 - **Expenses** — log expenses with category, receipt photo, on-device OCR auto-fill; tap to edit; swipe to delete
-- **Receipt scanning** — Apple Vision framework extracts amount, date, merchant on-device; AWS Textract runs server-side for line items
+- **Receipt scanning** — Apple Vision extracts amount, date, merchant on-device; AWS Textract runs server-side for line items
 - **Summary dashboard** — mileage + expense stats with date range filter (This Month / Last 30 / Last 90 / This Year / All Time)
 - **CSV export** — export trips, expenses, or combined report for any date range
 - **Invite-only auth** — Cognito SRP, Keychain token storage, auto-refresh
@@ -18,7 +18,7 @@ Tracks vehicle mileage and expenses with GPS trip tracking, receipt photo scanni
 
 ```
 MileageExpenseStack-{id}
-├── API Gateway              — REST API, Cognito-authorised
+├── API Gateway              — REST API, Cognito-authorised, idempotent (never recreated)
 ├── Lambda: vehicles         — CRUD
 ├── Lambda: trips            — CRUD
 ├── Lambda: expenses         — CRUD + presigned S3 upload URLs
@@ -27,38 +27,61 @@ MileageExpenseStack-{id}
 ├── DynamoDB: {id}-met-trips
 ├── DynamoDB: {id}-met-expenses
 ├── S3: {id}-met-receipts    — receipt photo storage
-└── Cognito App Client       — on shared User Pool from base stack
+├── Cognito App Client       — on your User Pool, idempotent (never recreated)
+└── Identity Pool            — scoped S3 access for authenticated users
 ```
 
-All resource names are prefixed with `{id}` derived from your base stack — no hardcoded names, no same-account collisions.
+All resource names are prefixed with `{id}` — no hardcoded names, no same-account collisions.
 
 ## Prerequisites
 
-1. Deploy [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893) first — note the path to its `base_outputs.json`
-2. AWS CLI configured, CDK bootstrapped, Node.js 20+
+- AWS CLI configured (`aws configure`)
+- AWS CDK bootstrapped (`npx cdk bootstrap`)
+- Node.js 20+
 
 ## Deploy backend
 
-```bash
-# 1. Clone
-git clone https://github.com/ltm893/mileage-expense-tracker-893.git
-cd mileage-expense-tracker-893
+### Option A — Standalone (bring your own Cognito User Pool)
 
-# 2. Deploy backend
-cd backend
+```bash
+git clone https://github.com/ltm893/mileage-expense-tracker-893.git
+cd mileage-expense-tracker-893/backend
 chmod +x scripts/deploy.sh
-BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
+
+ID_PREFIX=yourname \
+USER_POOL_ID=us-east-1_XXXXXXXXX \
+AWS_REGION=us-east-1 \
   ./scripts/deploy.sh
-# creates MileageExpenseStack-{id}
-# writes met_outputs.json at repo root
 ```
 
-The deploy script shows a summary of exactly what will be created before asking for confirmation.
+Use any existing Cognito User Pool. The deploy script will create a new App Client on that pool — idempotent, safe to rerun.
+
+### Option B — With cognito-s3-stack-893 base stack
+
+```bash
+git clone https://github.com/ltm893/mileage-expense-tracker-893.git
+cd mileage-expense-tracker-893/backend
+chmod +x scripts/deploy.sh
+
+BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
+  ./scripts/deploy.sh
+```
+
+The deploy script reads `ID_PREFIX`, `USER_POOL_ID`, and `AWS_REGION` from `base_outputs.json` automatically.
+
+### What deploy.sh does
+
+1. Checks if `{id}-met-client` exists on the User Pool — creates it only if missing
+2. Checks if `{id}-mileage-expense-api` exists — imports it into CDK if found, creates if not
+3. Runs `cdk deploy` — creates DynamoDB tables, S3 bucket, Identity Pool, Lambdas
+4. Writes `met_outputs.json` to the repo root with all resource values
+
+**Idempotent** — safe to run on every deploy. Stateful resources (API Gateway, Cognito App Client, DynamoDB tables, S3 bucket) are never recreated once they exist.
 
 ## Build iOS app
 
 1. Open `ios/MileageTracker893/MileageTracker893.xcodeproj` in Xcode
-2. Drag `met_outputs.json` from the repo root into the `MileageTracker893` group in Xcode
+2. Drag `met_outputs.json` from the repo root into the `MileageTracker893` group
    - Check "Copy items if needed"
    - Confirm target membership is checked
 3. `⇧⌘K` clean, `⌘B` build, `⌘R` run
@@ -122,15 +145,15 @@ All endpoints require `Authorization: <Cognito ID token>`.
 ```
 mileage-expense-tracker-893/
 ├── backend/
-│   ├── bin/app.ts              ← CDK entry — derives idPrefix from base_outputs.json
-│   ├── lib/met-stack.ts        ← CDK stack — all names use idPrefix
+│   ├── bin/app.ts              ← CDK entry — supports env var overrides + base_outputs.json
+│   ├── lib/met-stack.ts        ← CDK stack — imports existing API GW + app client, never recreates
 │   ├── lib/base-outputs.ts     ← TypeScript type for base_outputs.json
 │   ├── lambda/
 │   │   ├── vehicles/index.ts
 │   │   ├── trips/index.ts
 │   │   ├── expenses/index.ts
 │   │   └── ocr/index.ts
-│   └── scripts/deploy.sh
+│   └── scripts/deploy.sh       ← idempotent deploy + writes met_outputs.json
 ├── ios/MileageTracker893/
 │   └── MileageTracker893/
 │       ├── Config/             ← AppConfig (reads met_outputs.json), AppColors
@@ -164,12 +187,17 @@ mileage-expense-tracker-893/
 ```bash
 # Destroy backend stack (DynamoDB tables + S3 bucket are retained)
 cd backend
-BASE_OUTPUTS_PATH=/path/to/base_outputs.json \
-  npx cdk destroy MileageExpenseStack-{id}
+npx cdk destroy MileageExpenseStack-{id}
 
-# Delete retained resources
+# Delete retained resources manually
 aws s3 rb s3://{id}-met-receipts --force
 aws dynamodb delete-table --table-name {id}-met-vehicles --region us-east-1
 aws dynamodb delete-table --table-name {id}-met-trips --region us-east-1
 aws dynamodb delete-table --table-name {id}-met-expenses --region us-east-1
+
+# Delete Cognito app client
+aws cognito-idp delete-user-pool-client \
+  --user-pool-id <user_pool_id> \
+  --client-id <client_id> \
+  --region us-east-1
 ```

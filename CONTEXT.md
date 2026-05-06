@@ -2,38 +2,79 @@
 # Read this first at the start of every session.
 
 ## What this repo is
-Standalone add-on for cognito-s3-stack-893. Tracks vehicle mileage and expenses with GPS trip tracking, receipt OCR scanning, and CSV export. iOS app display name: **MilesExpenses**.
+Standalone, forkable mileage and expense tracker. Deploy your own AWS backend against any Cognito User Pool — no dependency on cognito-s3-stack-893 required, but compatible with it. iOS app display name: **MilesExpenses**.
 
 ## Architecture decisions
-- **Auth**: Cognito from shared base stack — raw URLSession + Cognito SRP, no Amplify
-- **base_outputs.json**: Read via BASE_OUTPUTS_PATH env var
-- **met_outputs.json**: Written to repo root by deploy.sh, gitignored
-- **idPrefix**: Derived from `base_outputs.json` `public_bucket` name (e.g. `test893-public` → `test893`) — drives all resource names, no hardcoding, no collisions
+- **Auth**: Raw URLSession + Cognito SRP — no Amplify SDK anywhere
+- **Config**: `met_outputs.json` baked into iOS app bundle at build time — zero hardcoded values
+- **idPrefix**: Drives all resource names — derived from `base_outputs.json` public_bucket OR set via `ID_PREFIX` env var override
+- **Idempotent deploy**: `deploy.sh` checks for existing Cognito app client and API Gateway before CDK runs — never recreates stateful resources
+- **CDK import pattern**: When resources exist, CDK imports them via ID (`fromRestApiAttributes`, direct client ID reference) — no recreation risk
 - **Standalone**: Not nested inside cognito-s3-stack-893
 
 ## Repo family
-- `cognito-s3-stack-893` — forkable base, deploy first
+- `cognito-s3-stack-893` — forkable base stack (optional dependency)
 - `mileage-expense-tracker-893` — this repo ✅ complete
 - `music-player-893` — not created yet
 
+## Deploy modes
+### Option A — Standalone (any Cognito User Pool)
+```bash
+ID_PREFIX=yourname \
+USER_POOL_ID=us-east-1_XXXXXXXXX \
+AWS_REGION=us-east-1 \
+  ./backend/scripts/deploy.sh
+```
+
+### Option B — With cognito-s3-stack-893
+```bash
+BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
+  ./backend/scripts/deploy.sh
+```
+
+## deploy.sh idempotency
+1. Checks `{id}-met-client` on User Pool → creates only if missing → passes `MET_CLIENT_ID` to CDK
+2. Checks `{id}-mileage-expense-api` → if found, fetches root resource ID → passes `MET_API_ID` + `MET_API_ROOT_ID` to CDK
+3. CDK imports existing resources via ID — never recreates them
+4. On first deploy CDK creates both; on all subsequent deploys both are imported
+5. Writes `met_outputs.json` to repo root after deploy
+
 ## Backend status ✅ Complete + Deployed
-- `backend/bin/app.ts` — derives idPrefix, stack = `MileageExpenseStack-{idPrefix}`
-- `backend/lib/met-stack.ts` — all resource names prefixed with idPrefix
+- `backend/bin/app.ts` — supports env var overrides (ID_PREFIX/USER_POOL_ID/AWS_REGION) + base_outputs.json fallback
+- `backend/lib/met-stack.ts` — accepts metClientId/metApiId/metApiRootId props; imports or creates accordingly
 - `backend/lib/base-outputs.ts` — TypeScript type for base_outputs.json
 - `backend/lambda/vehicles/` — CRUD
 - `backend/lambda/trips/` — CRUD
 - `backend/lambda/expenses/` — CRUD + presigned S3 URLs
 - `backend/lambda/ocr/` — S3 trigger → Textract
-- `backend/scripts/deploy.sh` — derives idPrefix via grep, resource summary before confirm, writes met_outputs.json to repo root
+- `backend/scripts/deploy.sh` — idempotent pre-checks, env var overrides, writes met_outputs.json
 
-## Deployed values (test893)
-- Stack: MileageExpenseStack-test893
-- API: https://1a6uphz606.execute-api.us-east-1.amazonaws.com/prod/
-- User Pool: us-east-1_9v0zP2VID
-- App Client: 1rr1jpp7651pttbr9fjmkai00d
-- Identity Pool: us-east-1:e852387e-bd32-4c67-9fa9-2362c85a8e0a
-- Receipts bucket: met893-receipts (note: original stack used hardcoded names)
-- Tables: met893-vehicles, met893-trips, met893-expenses
+## Deployed values — dliv893 (your personal deployment on dlivFriendsProd)
+- Stack:           MileageExpenseStack-dliv893
+- API Gateway:     a4zm91fvsl — https://a4zm91fvsl.execute-api.us-east-1.amazonaws.com/prod/
+- User Pool:       us-east-1_A4MFXeYS7 (dlivFriendsProd)
+- App Client:      7d9fi2r1ksr3u127mmjj4tmh1b (dliv893-met-client)
+- Identity Pool:   us-east-1:479c2bb8-9c6a-4bc6-a86a-194547716177
+- Receipts bucket: dliv893-met-receipts
+- Tables:          dliv893-met-vehicles, dliv893-met-trips, dliv893-met-expenses
+
+## Old deployed values — met893 (deprecated, on dlivFriendsDev)
+- Stack:           MileageExpenseStack-met893 (old root-level stack, stale)
+- API Gateway:     1a6uphz606
+- User Pool:       us-east-1_9v0zP2VID (dlivFriendsDev) — wrong pool
+- App Client:      1rr1jpp7651pttbr9fjmkai00d
+- Identity Pool:   us-east-1:e852387e-bd32-4c67-9fa9-2362c85a8e0a
+- Receipts bucket: met893-receipts (data retained, not migrated yet)
+- Tables:          met893-vehicles, met893-trips, met893-expenses (data retained, not migrated yet)
+
+## Redeploy command (your personal deployment)
+```bash
+cd /Users/ltm893/Dev/projects/mileage-expense-tracker-893/backend
+ID_PREFIX=dliv893 \
+USER_POOL_ID=us-east-1_A4MFXeYS7 \
+AWS_REGION=us-east-1 \
+  ./scripts/deploy.sh
+```
 
 ## iOS status ✅ Complete
 SwiftUI, MVVM, raw URLSession + Cognito SRP (no Amplify)
@@ -57,7 +98,7 @@ Display name: `MilesExpenses` (set via `CFBundleDisplayName` in Info.plist)
 - `Views/SummaryView.swift` — dashboard stats + date-range filter + CSV export
 - `Views/SettingsView.swift` — app info, sign out
 
-## TripsView ✅ Complete (updated 2026-05-02)
+## TripsView ✅ Complete
 - `TrackingMode` enum: GPS / Odometer / Both — shown as tappable cards on step 1
 - GPS mode: live CoreLocation tracking, skip odometer fields
 - Odometer mode: start + end reading, skip GPS step, manual date picker
@@ -65,47 +106,51 @@ Display name: `MilesExpenses` (set via `CFBundleDisplayName` in Info.plist)
 - List rows: compact — date, miles, purpose (if set) only
 - Tap row → sheet with read view + Edit button → inline edit → Save/Cancel
 - Swipe to delete
-- `TripDetailView` — read/edit all fields: date, vehicle, purpose, notes, odometer start/end, GPS distance
 
-## SummaryView ✅ Complete (updated 2026-05-02)
+## SummaryView ✅ Complete
 - `DateRangeFilter` enum: This Month / Last 30 Days / Last 90 Days / This Year / All Time
-- Horizontal pill selector — updates all cards reactively, no extra API call
+- Horizontal pill selector — updates all cards reactively
 - Mileage card: total miles, trip count, avg mi/trip, per-vehicle bar chart
 - Expenses card: total / vehicle / general pills, by-category bar chart
-- Empty-state messages when no data in selected period
 - Export card: trips, expenses, or combined CSV for the active filter period
-- Filenames include period slug (e.g. `trips_this_month_2026-05-02.csv`)
-- `ShareSheet` (`UIViewControllerRepresentable`) included in this file
 
-## App Icon ✅ Complete (2026-05-02)
-- Speedometer gauge design — navy background, teal arc, amber needle, no text
+## App Icon ✅ Complete
+- Speedometer gauge — navy background, teal arc, amber needle, no text
 - Source SVG: `Assets.xcassets/AppIcon.appiconset/met_icon_source.svg`
-- PNGs generated via `rsvg-convert` for all required sizes (20→1024)
-- `Contents.json` wired to `icon_1024.png` for all three slots (light / dark / tinted)
 - Regenerate PNGs: `for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do rsvg-convert -w $size -h $size "$SVG" -o "$OUT/icon_${size}.png"; done`
 
-## Fork test — COMPLETE ✅
-- Deployed `CognitoS3BaseStack-forktest2` + `MileageExpenseStack-forktest2` on same AWS account
-- Built iOS app against forktest2 backend — login + expense creation confirmed working
-- Proved zero-collision add-on pattern works end-to-end
-- forktest2 stacks destroyed after test
-
 ## Known fixes applied
-- `Models.swift` — `decodeIfPresent` on all fields — DynamoDB omits undefined fields, Swift default Codable throws
-- `deploy.sh` REPO_ROOT — fixed to `${BACKEND_DIR}/..` (was resolving to `backend/` not repo root)
-- Stack + resource names — all derived from idPrefix, nothing hardcoded
-- Deploy scripts — config read via grep not node -e, pre-confirmation resource summary added
+- `Models.swift` — `decodeIfPresent` on all fields — DynamoDB omits undefined fields
+- `deploy.sh` REPO_ROOT — fixed to `${BACKEND_DIR}/..`
+- Stack + resource names — all derived from idPrefix
 - `SummaryView.swift` — added missing `import Combine`, `ShareSheet` wrapper, `DateRangeFilter`
+- `met-stack.ts` — CDK import pattern for app client + API Gateway (never recreates)
+- `bin/app.ts` — env var override mode (ID_PREFIX/USER_POOL_ID/AWS_REGION) bypasses base_outputs.json
+- `api.url` TS error — `IRestApi` doesn't expose `.url`; reconstructed from known API ID + region
+
+## Stale files to clean up (root-level CDK — superseded by backend/)
+- `/lib/met-stack.ts` — old stack with hardcoded pool ID
+- `/bin/app.ts` — old CDK entry
+- `/bin/config.ts` — hardcoded values
+- `/cdk.json` — root-level CDK config
+These are safe to delete — `backend/` is the authoritative CDK stack.
+
+## Data migration (not yet done)
+Existing data in `met893-*` tables uses Cognito sub values from `dlivFriendsDev`.
+New stack (`dliv893-*`) uses `dlivFriendsProd` — different sub values, data not visible.
+Old tables and bucket retained. Migration is a future task.
 
 ## For forkers
-1. Fork + clone `cognito-s3-stack-893`, set `config.ts`, run `deploy.sh` → `base_outputs.json`
-2. Fork + clone this repo
-3. `BASE_OUTPUTS_PATH=/path/to/base_outputs.json ./backend/scripts/deploy.sh` → `met_outputs.json`
-4. Open `ios/MileageTracker893/MileageTracker893.xcodeproj`
-5. Drag `met_outputs.json` into Xcode target (Copy if needed + target membership)
-6. Create Cognito user via aws CLI
-7. `⇧⌘K` clean, `⌘B` build, `⌘R` run
+1. Clone this repo
+2. Run `deploy.sh` with either Option A (your own pool) or Option B (cognito-s3-stack-893)
+3. Open `ios/MileageTracker893/MileageTracker893.xcodeproj`
+4. Drag `met_outputs.json` into Xcode target (Copy if needed + target membership)
+5. Create Cognito user via aws CLI
+6. `⇧⌘K` clean, `⌘B` build, `⌘R` run
 
-## Next session — start here
-1. Read this file
-2. Project is complete and pushed to `dev` — next project is `music-player-893`
+## Next steps
+1. Copy new `met_outputs.json` into Xcode + rebuild iOS app against dliv893 stack
+2. Test login with `ltm893@icloud.com` against `dlivFriendsProd`
+3. Clean up stale root-level CDK files (`/lib`, `/bin`, `/cdk.json`)
+4. Consider data migration from `met893-*` to `dliv893-*` tables
+5. Move on to MusicPlayer — same portability pattern

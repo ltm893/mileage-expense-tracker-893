@@ -13,25 +13,49 @@ import * as path from "path";
 import { BaseOutputs } from "./base-outputs";
 
 export interface MileageExpenseStackProps extends cdk.StackProps {
-  base:     BaseOutputs;
-  idPrefix: string;   // e.g. "test893" or "forktest2" — drives all resource names
+  base:      BaseOutputs;
+  idPrefix:  string;   // e.g. "test893" — drives all resource names
+
+  // Pre-resolved by deploy.sh via idempotent AWS CLI checks.
+  // When provided, CDK imports the existing resource instead of creating a new one.
+  // When absent (first deploy), CDK creates and deploy.sh persists the ID on next run.
+  metClientId?: string;   // existing Cognito app client ID
+  metApiId?:    string;   // existing API Gateway REST API ID
+  metApiRootId?: string;  // root resource ID of existing API Gateway
 }
 
 export class MileageExpenseStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: MileageExpenseStackProps) {
     super(scope, id, props);
 
-    const { base, idPrefix } = props;
+    const { base, idPrefix, metClientId, metApiId, metApiRootId } = props;
 
+    // ── Cognito ───────────────────────────────────────────────────────────────
     const userPool = cognito.UserPool.fromUserPoolId(
       this, "SharedUserPool", base.auth.user_pool_id
     );
 
-    const appClient = userPool.addClient("MileageExpenseClient", {
-      userPoolClientName: `${idPrefix}-met-client`,
-      authFlows: { userPassword: true, userSrp: true, adminUserPassword: true },
-      preventUserExistenceErrors: true,
-    });
+    // Import existing app client if deploy.sh found one, otherwise create.
+    // The client is created once by deploy.sh and never recreated — CDK only
+    // imports it here so it can reference the client ID in other constructs.
+    let appClientId: string;
+    if (metClientId) {
+      // Import — CDK does not manage lifecycle, no risk of recreation.
+      appClientId = metClientId;
+    } else {
+      // First deploy: create the client. deploy.sh will persist the ID
+      // and pass it back on all future deploys via MET_CLIENT_ID env var.
+      const appClient = userPool.addClient("MileageExpenseClient", {
+        userPoolClientName: `${idPrefix}-met-client`,
+        authFlows: {
+          userPassword:      true,
+          userSrp:           true,
+          adminUserPassword: true,
+        },
+        preventUserExistenceErrors: true,
+      });
+      appClientId = appClient.userPoolClientId;
+    }
 
     new cognito.CfnUserPoolGroup(this, "MileageAccessGroup", {
       groupName:   `${idPrefix}-mileage-access`,
@@ -43,11 +67,12 @@ export class MileageExpenseStack extends cdk.Stack {
       identityPoolName:               `${idPrefix}_met_identity_pool`,
       allowUnauthenticatedIdentities: false,
       cognitoIdentityProviders: [{
-        clientId:     appClient.userPoolClientId,
+        clientId:     appClientId,
         providerName: userPool.userPoolProviderName,
       }],
     });
 
+    // ── S3 ────────────────────────────────────────────────────────────────────
     const receiptsBucket = new s3.Bucket(this, "ReceiptsBucket", {
       bucketName:        `${idPrefix}-met-receipts`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -61,6 +86,7 @@ export class MileageExpenseStack extends cdk.Stack {
       }],
     });
 
+    // ── DynamoDB ──────────────────────────────────────────────────────────────
     const vehiclesTable = new dynamodb.Table(this, "VehiclesTable", {
       tableName:     `${idPrefix}-met-vehicles`,
       partitionKey:  { name: "userId",    type: dynamodb.AttributeType.STRING },
@@ -97,6 +123,7 @@ export class MileageExpenseStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
+    // ── Lambdas ───────────────────────────────────────────────────────────────
     const commonEnv: Record<string, string> = {
       VEHICLES_TABLE:     vehiclesTable.tableName,
       TRIPS_TABLE:        tripsTable.tableName,
@@ -145,6 +172,7 @@ export class MileageExpenseStack extends cdk.Stack {
       { prefix: "receipts/" }
     );
 
+    // ── IAM auth role for Identity Pool ──────────────────────────────────────
     const authRole = new iam.Role(this, "METAuthRole", {
       assumedBy: new iam.FederatedPrincipal("cognito-identity.amazonaws.com", {
         StringEquals: { "cognito-identity.amazonaws.com:aud": identityPool.ref },
@@ -160,47 +188,68 @@ export class MileageExpenseStack extends cdk.Stack {
       roles: { authenticated: authRole.roleArn },
     });
 
-    const api = new apigateway.RestApi(this, "METAPI", {
-      restApiName: `${idPrefix}-mileage-expense-api`,
-      defaultCorsPreflightOptions: {
-        allowOrigins: apigateway.Cors.ALL_ORIGINS,
-        allowMethods: apigateway.Cors.ALL_METHODS,
-        allowHeaders: ["Content-Type", "Authorization"],
-      },
-    });
+    // ── API Gateway ───────────────────────────────────────────────────────────
+    // Import existing API Gateway if deploy.sh found one, otherwise create.
+    // Importing prevents CDK from ever recreating it and changing its ID,
+    // which would break all iOS clients that have the URL baked in.
+    let api: apigateway.IRestApi;
+    if (metApiId && metApiRootId) {
+      // Import — CDK references the existing API, never recreates it.
+      api = apigateway.RestApi.fromRestApiAttributes(this, "METAPI", {
+        restApiId:      metApiId,
+        rootResourceId: metApiRootId,
+      });
+    } else {
+      // First deploy: create the API. deploy.sh persists the ID after this run.
+      api = new apigateway.RestApi(this, "METAPI", {
+        restApiName: `${idPrefix}-mileage-expense-api`,
+        defaultCorsPreflightOptions: {
+          allowOrigins: apigateway.Cors.ALL_ORIGINS,
+          allowMethods: apigateway.Cors.ALL_METHODS,
+          allowHeaders: ["Content-Type", "Authorization"],
+        },
+      });
+    }
 
     const authorizer = new apigateway.CognitoUserPoolsAuthorizer(this, "METAuthorizer", {
       cognitoUserPools: [userPool],
     });
-    const auth: apigateway.MethodOptions = {
+    const authOptions: apigateway.MethodOptions = {
       authorizer,
       authorizationType: apigateway.AuthorizationType.COGNITO,
     };
 
     const vehicles = api.root.addResource("vehicles");
-    vehicles.addMethod("GET",  new apigateway.LambdaIntegration(vehiclesLambda), auth);
-    vehicles.addMethod("POST", new apigateway.LambdaIntegration(vehiclesLambda), auth);
+    vehicles.addMethod("GET",  new apigateway.LambdaIntegration(vehiclesLambda), authOptions);
+    vehicles.addMethod("POST", new apigateway.LambdaIntegration(vehiclesLambda), authOptions);
     const vehicle = vehicles.addResource("{vehicleId}");
-    vehicle.addMethod("PUT",    new apigateway.LambdaIntegration(vehiclesLambda), auth);
-    vehicle.addMethod("DELETE", new apigateway.LambdaIntegration(vehiclesLambda), auth);
+    vehicle.addMethod("PUT",    new apigateway.LambdaIntegration(vehiclesLambda), authOptions);
+    vehicle.addMethod("DELETE", new apigateway.LambdaIntegration(vehiclesLambda), authOptions);
 
     const trips = api.root.addResource("trips");
-    trips.addMethod("GET",  new apigateway.LambdaIntegration(tripsLambda), auth);
-    trips.addMethod("POST", new apigateway.LambdaIntegration(tripsLambda), auth);
+    trips.addMethod("GET",  new apigateway.LambdaIntegration(tripsLambda), authOptions);
+    trips.addMethod("POST", new apigateway.LambdaIntegration(tripsLambda), authOptions);
     const trip = trips.addResource("{tripId}");
-    trip.addMethod("PUT",    new apigateway.LambdaIntegration(tripsLambda), auth);
-    trip.addMethod("DELETE", new apigateway.LambdaIntegration(tripsLambda), auth);
+    trip.addMethod("PUT",    new apigateway.LambdaIntegration(tripsLambda), authOptions);
+    trip.addMethod("DELETE", new apigateway.LambdaIntegration(tripsLambda), authOptions);
 
     const expenses = api.root.addResource("expenses");
-    expenses.addMethod("GET",  new apigateway.LambdaIntegration(expensesLambda), auth);
-    expenses.addMethod("POST", new apigateway.LambdaIntegration(expensesLambda), auth);
+    expenses.addMethod("GET",  new apigateway.LambdaIntegration(expensesLambda), authOptions);
+    expenses.addMethod("POST", new apigateway.LambdaIntegration(expensesLambda), authOptions);
     const expense = expenses.addResource("{expenseId}");
-    expense.addMethod("PUT",    new apigateway.LambdaIntegration(expensesLambda), auth);
-    expense.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), auth);
+    expense.addMethod("PUT",    new apigateway.LambdaIntegration(expensesLambda), authOptions);
+    expense.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), authOptions);
 
-    new cdk.CfnOutput(this, "METApiUrl",        { value: api.url });
+    // ── Outputs ───────────────────────────────────────────────────────────────
+    // When API is imported (metApiId set), api.url is not available on IRestApi.
+    // Reconstruct the URL from the known ID and region instead.
+    const apiUrl = metApiId
+      ? `https://${metApiId}.execute-api.${base.aws_region}.amazonaws.com/prod/`
+      : (api as apigateway.RestApi).url;
+
+    new cdk.CfnOutput(this, "METApiUrl",        { value: apiUrl });
     new cdk.CfnOutput(this, "METUserPoolId",     { value: userPool.userPoolId });
-    new cdk.CfnOutput(this, "METAppClientId",    { value: appClient.userPoolClientId });
+    new cdk.CfnOutput(this, "METAppClientId",    { value: appClientId });
     new cdk.CfnOutput(this, "METIdentityPoolId", { value: identityPool.ref });
     new cdk.CfnOutput(this, "METReceiptsBucket", { value: receiptsBucket.bucketName });
     new cdk.CfnOutput(this, "METVehiclesTable",  { value: vehiclesTable.tableName });
