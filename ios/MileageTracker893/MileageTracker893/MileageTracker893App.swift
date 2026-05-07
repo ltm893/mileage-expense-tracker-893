@@ -4,20 +4,23 @@ import SwiftUI
 @main
 struct MileageTracker893App: App {
 
-    @StateObject private var authService = AuthService()
+    /// Wire API auth synchronously. Tab `.task` loaders can run before any `.onAppear`, which previously left `NetworkService.authService == nil` and caused bare GETs → HTTP 401.
+    @StateObject private var authService = MileageTracker893App.bootstrapAuth()
 
     init() {
-        NetworkService.shared.authService = nil
         applyAppearance()
+    }
+
+    private static func bootstrapAuth() -> AuthService {
+        let service = AuthService()
+        NetworkService.shared.authService = service
+        return service
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(authService)
-                .onAppear {
-                    NetworkService.shared.authService = authService
-                }
         }
     }
 

@@ -63,7 +63,8 @@ final class NetworkService {
 
         if let auth = authService {
             let token = try await auth.idToken()
-            req.setValue(token, forHTTPHeaderField: "Authorization")
+            let header = token.lowercased().hasPrefix("bearer ") ? token : "Bearer \(token)"
+            req.setValue(header, forHTTPHeaderField: "Authorization")
         }
         return req
     }
