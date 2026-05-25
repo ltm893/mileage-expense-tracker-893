@@ -1,0 +1,1456 @@
+{
+  "/METStack": [
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/DlivAccessGroup": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DlivAccessGroup"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:37:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/MileageAccessGroup": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "MileageAccessGroup"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:43:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METIdentityPool": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METIdentityPool"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:49:26)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METVehiclesTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "METVehiclesTableA413BB4A"
+      }
+    }
+  ],
+  "/METStack/METTripsTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "METTripsTable679A12A9"
+      }
+    }
+  ],
+  "/METStack/METExpensesTable": [
+    {
+      "type": "aws:cdk:hasPhysicalName",
+      "data": {
+        "Ref": "METExpensesTableD62AB05B"
+      }
+    }
+  ],
+  "/METStack/METIdentityPoolRoles": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METIdentityPoolRoles"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:210:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ApiUrl": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ApiUrl"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:261:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/UserPoolId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UserPoolId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:262:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/UserPoolClientId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "UserPoolClientId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:263:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/IdentityPoolId": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "IdentityPoolId"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:264:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ReceiptsBucketName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ReceiptsBucketName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:265:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/VehiclesTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VehiclesTableName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:266:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/TripsTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TripsTableName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:267:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ExpensesTableName": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExpensesTableName"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:268:5)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/BootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/METStack/CheckBootstrapVersion": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CheckBootstrapVersion"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/METStack/METReceiptsBucket/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METReceiptsBucket740CE977"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Bucket2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:60:28)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METReceiptsBucket/AllowBucketNotificationsToMETStackOCRLambdaA4005DEA": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METReceiptsBucketAllowBucketNotificationsToMETStackOCRLambdaA4005DEA38A3CC8F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addEventNotification in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:178:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METVehiclesTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METVehiclesTableA413BB4A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:76:27)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METTripsTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METTripsTable679A12A9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:84:24)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METExpensesTable/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METExpensesTableD62AB05B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Table2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:99:27)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/VehiclesLambda/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VehiclesLambda69B85032"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:140:28)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/TripsLambda/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TripsLambda73F4ECB1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:144:25)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ExpensesLambda/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExpensesLambda7DDC2469"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:148:28)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/OCRLambda/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "OCRLambda0B9C773A"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:152:23)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addEventNotification in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:178:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAuthenticatedRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAuthenticatedRoleBC604ED7"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new Role2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:184:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIAD5E595F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Account": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIAccount539F92EF"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Endpoint": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIEndpoint14774321"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAuthorizer/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAuthorizerB3411837"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new CognitoUserPoolsAuthorizer2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:225:24)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/CDKMetadata/Default": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "CDKMetadata"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...aws-cdk-lib, node internals, @cspotcode/source-map-support...",
+        "(no user code in 9007199254740991 frames, use --stack-trace-limit to capture more)"
+      ]
+    }
+  ],
+  "/METStack/DlivUserPool/METMobileClient/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "DlivUserPoolMETMobileClient17E92538"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...ImportedUserPool.addClient in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:27:35)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METReceiptsBucket/Notifications/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METReceiptsBucketNotificationsC5AB3C38"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addEventNotification in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:178:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/VehiclesLambda/ServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VehiclesLambdaServiceRole8BEED67E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:140:28)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/TripsLambda/ServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TripsLambdaServiceRole769AEAFE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:144:25)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ExpensesLambda/ServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExpensesLambdaServiceRole9F15200F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:148:28)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/OCRLambda/ServiceRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "OCRLambdaServiceRole3BCAFC32"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new NodejsFunction in aws-cdk-lib...",
+        "makeLambda (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:123:7)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:152:23)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addEventNotification in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:178:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAuthenticatedRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAuthenticatedRoleDefaultPolicy394B5612"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.<anonymous> in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:200:14)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/CloudWatchRole/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPICloudWatchRole47B1FE99"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Deployment/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIDeployment5ACF30ACc0cfba3f7ba18a35300f94232599bc90"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/DeploymentStage.prod/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIDeploymentStageprodF4FC19AC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/VehiclesLambda/ServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "VehiclesLambdaServiceRoleDefaultPolicy1710CD3B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
+        "/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160: (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160:2)",
+        "Array.forEach (:)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:159:51)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/TripsLambda/ServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "TripsLambdaServiceRoleDefaultPolicyD472F4B8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
+        "/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160: (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160:2)",
+        "Array.forEach (:)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:159:51)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/ExpensesLambda/ServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "ExpensesLambdaServiceRoleDefaultPolicyFAAF4328"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantReadWriteData in aws-cdk-lib...",
+        "/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160: (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:160:2)",
+        "Array.forEach (:)",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:159:51)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/OCRLambda/ServiceRole/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "OCRLambdaServiceRoleDefaultPolicyD7D4D91D"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.grantRead in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:169:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addEventNotification in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:178:20)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIOPTIONS42649521"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...new RestApi2 in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:215:17)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehicles25798941"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:239:39)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItrips33E77772"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:246:36)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpenses6AEEC71E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:253:39)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesOPTIONS8F9BDE92"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:239:39)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..vehicles": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesGETApiPermissionMETStackMETAPIBB0E9E59GETvehicles4EAEE7FE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:240:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..vehicles": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesGETApiPermissionTestMETStackMETAPIBB0E9E59GETvehicles71E79DEC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:240:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/GET/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesGETB7D31578"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:240:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..vehicles": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesPOSTApiPermissionMETStackMETAPIBB0E9E59POSTvehicles063232D1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:241:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..vehicles": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTvehicles06A9CB9E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:241:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/POST/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesPOSTEBC778B2"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:241:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleId87E62EE4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:242:46)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsOPTIONS421B1A76"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:246:36)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..trips": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsGETApiPermissionMETStackMETAPIBB0E9E59GETtrips9715FEA1"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:247:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..trips": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsGETApiPermissionTestMETStackMETAPIBB0E9E59GETtrips7A1AEA8F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:247:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/GET/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsGET6DB66D01"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:247:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..trips": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsPOSTApiPermissionMETStackMETAPIBB0E9E59POSTtrips156A6952"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:248:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..trips": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTtrips7192D9C0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:248:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/POST/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripsPOST54A742D6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:248:19)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripId65661727"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:249:40)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesOPTIONS72BB73AA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...RootResource.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:253:39)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..expenses": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesGETApiPermissionMETStackMETAPIBB0E9E59GETexpensesE38C8884"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:254:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..expenses": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesGETApiPermissionTestMETStackMETAPIBB0E9E59GETexpenses58E81C5F"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:254:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/GET/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesGET0937B364"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:254:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..expenses": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesPOSTApiPermissionMETStackMETAPIBB0E9E59POSTexpenses7DD637B0"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:255:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..expenses": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTexpenses820AB530"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:255:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/POST/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesPOST37032F5B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:255:22)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseId9F8D0599"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:256:46)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdOPTIONS97EF3191"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:242:46)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..vehicles.{vehicleId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTvehiclesvehicleId1FBF68C6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:243:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..vehicles.{vehicleId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTvehiclesvehicleId53A25EBA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:243:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/PUT/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdPUTE8939C5E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:243:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..vehicles.{vehicleId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEvehiclesvehicleId3DB16727"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:244:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..vehicles.{vehicleId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEvehiclesvehicleId97E7EA59"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:244:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIvehiclesvehicleIdDELETEE5EAAA76"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:244:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdOPTIONSD50B2DCA"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:249:40)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..trips.{tripId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTtripstripId9CAAFE45"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:250:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..trips.{tripId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTtripstripIdE59FAA09"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:250:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/PUT/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdPUTD9435836"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:250:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..trips.{tripId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEtripstripId325E99C4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:251:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..trips.{tripId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEtripstripIdBA8C5423"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:251:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/trips/{tripId}/DELETE/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPItripstripIdDELETEFE74C7B4"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:251:18)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/OPTIONS/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdOPTIONSF0AF25F9"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addResource in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:256:46)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..expenses.{expenseId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTexpensesexpenseId50F8DFF8"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:257:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..expenses.{expenseId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTexpensesexpenseIdD7C40EBE"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:257:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/PUT/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdPUTDFF8983B"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:257:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..expenses.{expenseId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEexpensesexpenseId0B991CC6"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:258:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..expenses.{expenseId}": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEexpensesexpenseId8D6C05AC"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:258:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ],
+  "/METStack/METAPI/Default/expenses/{expenseId}/DELETE/Resource": [
+    {
+      "type": "aws:cdk:logicalId",
+      "data": "METAPIexpensesexpenseIdDELETE4A8F6D4E"
+    },
+    {
+      "type": "aws:cdk:creationStack",
+      "data": [
+        "...WrappedClass.addMethod in aws-cdk-lib...",
+        "new METStack (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/lib/met-stack.ts:258:21)",
+        "<anonymous> (/Users/ltm893/Dev/projects/mileage-expense-tracker-893/bin/app.ts:9:1)",
+        "...node internals, ts-node, ts-node, ts-node..."
+      ]
+    }
+  ]
+}

@@ -11,21 +11,19 @@ import * as iam from "aws-cdk-lib/aws-iam";
 import * as path from "path";
 
 export interface METStackProps extends cdk.StackProps {
-  appId:          string;  // "met893"
+  appId:          string;
   awsRegion:      string;
-  dlivUserPoolId: string;  // dliv.com's existing Cognito User Pool ID
+  dlivUserPoolId: string;
 }
 
 export class METStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: METStackProps) {
     super(scope, id, props);
 
-    // ── Import dliv.com's existing Cognito User Pool ──────────────────────────
     const userPool = cognito.UserPool.fromUserPoolId(
       this, "DlivUserPool", props.dlivUserPoolId
     );
 
-    // ── New App Client for the mileage app ────────────────────────────────────
     const metAppClient = userPool.addClient("METMobileClient", {
       userPoolClientName: "met893-mobile-client",
       authFlows: {
@@ -36,7 +34,6 @@ export class METStack extends cdk.Stack {
       preventUserExistenceErrors: true,
     });
 
-    // ── Cognito Groups ────────────────────────────────────────────────────────
     new cognito.CfnUserPoolGroup(this, "DlivAccessGroup", {
       groupName:   "dliv-access",
       userPoolId:  userPool.userPoolId,
@@ -49,7 +46,6 @@ export class METStack extends cdk.Stack {
       description: "Users allowed to access the mileage expense tracker",
     });
 
-    // ── Identity Pool for MET ─────────────────────────────────────────────────
     const identityPool = new cognito.CfnIdentityPool(this, "METIdentityPool", {
       identityPoolName:               "met893_identity_pool",
       allowUnauthenticatedIdentities: false,
@@ -61,7 +57,6 @@ export class METStack extends cdk.Stack {
       ],
     });
 
-    // ── S3 Receipts Bucket ────────────────────────────────────────────────────
     const receiptsBucket = new s3.Bucket(this, "METReceiptsBucket", {
       bucketName:        `${props.appId}-receipts`,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
@@ -78,7 +73,6 @@ export class METStack extends cdk.Stack {
       ],
     });
 
-    // ── DynamoDB Tables ───────────────────────────────────────────────────────
     const vehiclesTable = new dynamodb.Table(this, "METVehiclesTable", {
       tableName:     `${props.appId}-vehicles`,
       partitionKey:  { name: "userId",    type: dynamodb.AttributeType.STRING },
@@ -117,7 +111,6 @@ export class METStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // ── Shared Lambda environment variables ───────────────────────────────────
     const commonEnv: Record<string, string> = {
       VEHICLES_TABLE:     vehiclesTable.tableName,
       TRIPS_TABLE:        tripsTable.tableName,
@@ -126,7 +119,6 @@ export class METStack extends cdk.Stack {
       AWS_ACCOUNT_REGION: props.awsRegion,
     };
 
-    // ── Lambda function factory ───────────────────────────────────────────────
     const makeLambda = (name: string, entry: string, timeoutSecs = 10) =>
       new lambdaNodejs.NodejsFunction(this, name, {
         entry,
@@ -145,7 +137,6 @@ export class METStack extends cdk.Stack {
         },
       });
 
-    // ── API Lambda functions ──────────────────────────────────────────────────
     const vehiclesLambda = makeLambda(
       "VehiclesLambda",
       path.join(__dirname, "../lambda/vehicles/index.ts")
@@ -164,12 +155,16 @@ export class METStack extends cdk.Stack {
       30
     );
 
-    // ── IAM grants ───────────────────────────────────────────────────────────
+    // ── IAM grants ────────────────────────────────────────────────────────────
     [vehiclesLambda, tripsLambda, expensesLambda].forEach((fn) => {
       vehiclesTable.grantReadWriteData(fn);
       tripsTable.grantReadWriteData(fn);
       expensesTable.grantReadWriteData(fn);
     });
+
+    // Expenses Lambda needs S3 access to generate pre-signed upload URLs
+    receiptsBucket.grantPut(expensesLambda);
+    receiptsBucket.grantRead(expensesLambda);
 
     receiptsBucket.grantRead(ocrLambda);
     expensesTable.grantReadWriteData(ocrLambda);
@@ -180,14 +175,12 @@ export class METStack extends cdk.Stack {
       })
     );
 
-    // ── S3 → OCR Lambda trigger ───────────────────────────────────────────────
     receiptsBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(ocrLambda),
       { prefix: "receipts/" }
     );
 
-    // ── Identity Pool authenticated role ──────────────────────────────────────
     const authRole = new iam.Role(this, "METAuthenticatedRole", {
       description: "Temporary creds for authenticated MET mobile app users",
       assumedBy: new iam.FederatedPrincipal(
@@ -219,7 +212,6 @@ export class METStack extends cdk.Stack {
       roles: { authenticated: authRole.roleArn },
     });
 
-    // ── API Gateway ───────────────────────────────────────────────────────────
     const api = new apigateway.RestApi(this, "METAPI", {
       restApiName: "met893-api",
       description: "Mileage & expense tracker REST API",
@@ -266,7 +258,6 @@ export class METStack extends cdk.Stack {
     expenseResource.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), authOptions);
 
     // ── CloudFormation Outputs ────────────────────────────────────────────────
-    // Note: Output logical IDs must be unique AND different from construct IDs above.
     new cdk.CfnOutput(this, "ApiUrl",               { value: api.url,                       description: "API Gateway base URL" });
     new cdk.CfnOutput(this, "UserPoolId",            { value: userPool.userPoolId,           description: "Cognito User Pool ID (shared with dliv.com)" });
     new cdk.CfnOutput(this, "UserPoolClientId",      { value: metAppClient.userPoolClientId, description: "MET mobile app client ID" });

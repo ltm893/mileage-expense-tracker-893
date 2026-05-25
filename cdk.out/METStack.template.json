@@ -1,0 +1,3589 @@
+{
+ "Resources": {
+  "DlivUserPoolMETMobileClient17E92538": {
+   "Type": "AWS::Cognito::UserPoolClient",
+   "Properties": {
+    "AllowedOAuthFlows": [
+     "implicit",
+     "code"
+    ],
+    "AllowedOAuthFlowsUserPoolClient": true,
+    "AllowedOAuthScopes": [
+     "profile",
+     "phone",
+     "email",
+     "openid",
+     "aws.cognito.signin.user.admin"
+    ],
+    "CallbackURLs": [
+     "https://example.com"
+    ],
+    "ClientName": "met893-mobile-client",
+    "ExplicitAuthFlows": [
+     "ALLOW_USER_PASSWORD_AUTH",
+     "ALLOW_ADMIN_USER_PASSWORD_AUTH",
+     "ALLOW_USER_SRP_AUTH",
+     "ALLOW_REFRESH_TOKEN_AUTH"
+    ],
+    "PreventUserExistenceErrors": "ENABLED",
+    "SupportedIdentityProviders": [
+     "COGNITO"
+    ],
+    "UserPoolId": "us-east-1_9v0zP2VID"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/DlivUserPool/METMobileClient/Resource"
+   }
+  },
+  "DlivAccessGroup": {
+   "Type": "AWS::Cognito::UserPoolGroup",
+   "Properties": {
+    "Description": "Users allowed to access dliv.com",
+    "GroupName": "dliv-access",
+    "UserPoolId": "us-east-1_9v0zP2VID"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/DlivAccessGroup"
+   }
+  },
+  "MileageAccessGroup": {
+   "Type": "AWS::Cognito::UserPoolGroup",
+   "Properties": {
+    "Description": "Users allowed to access the mileage expense tracker",
+    "GroupName": "mileage-access",
+    "UserPoolId": "us-east-1_9v0zP2VID"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/MileageAccessGroup"
+   }
+  },
+  "METIdentityPool": {
+   "Type": "AWS::Cognito::IdentityPool",
+   "Properties": {
+    "AllowUnauthenticatedIdentities": false,
+    "CognitoIdentityProviders": [
+     {
+      "ClientId": {
+       "Ref": "DlivUserPoolMETMobileClient17E92538"
+      },
+      "ProviderName": {
+       "Fn::Join": [
+        "",
+        [
+         "cognito-idp.us-east-1.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/us-east-1_9v0zP2VID"
+        ]
+       ]
+      }
+     }
+    ],
+    "IdentityPoolName": "met893_identity_pool"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METIdentityPool"
+   }
+  },
+  "METReceiptsBucket740CE977": {
+   "Type": "AWS::S3::Bucket",
+   "Properties": {
+    "BucketName": "met893-receipts",
+    "CorsConfiguration": {
+     "CorsRules": [
+      {
+       "AllowedHeaders": [
+        "*"
+       ],
+       "AllowedMethods": [
+        "PUT",
+        "GET"
+       ],
+       "AllowedOrigins": [
+        "*"
+       ],
+       "ExposedHeaders": [
+        "ETag"
+       ],
+       "MaxAge": 3000
+      }
+     ]
+    },
+    "PublicAccessBlockConfiguration": {
+     "BlockPublicAcls": true,
+     "BlockPublicPolicy": true,
+     "IgnorePublicAcls": true,
+     "RestrictPublicBuckets": true
+    }
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METReceiptsBucket/Resource"
+   }
+  },
+  "METReceiptsBucketNotificationsC5AB3C38": {
+   "Type": "Custom::S3BucketNotifications",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691",
+      "Arn"
+     ]
+    },
+    "BucketName": {
+     "Ref": "METReceiptsBucket740CE977"
+    },
+    "NotificationConfiguration": {
+     "LambdaFunctionConfigurations": [
+      {
+       "Events": [
+        "s3:ObjectCreated:*"
+       ],
+       "Filter": {
+        "Key": {
+         "FilterRules": [
+          {
+           "Name": "prefix",
+           "Value": "receipts/"
+          }
+         ]
+        }
+       },
+       "LambdaFunctionArn": {
+        "Fn::GetAtt": [
+         "OCRLambda0B9C773A",
+         "Arn"
+        ]
+       }
+      }
+     ]
+    },
+    "Managed": true,
+    "SkipDestinationValidation": false
+   },
+   "DependsOn": [
+    "METReceiptsBucketAllowBucketNotificationsToMETStackOCRLambdaA4005DEA38A3CC8F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/METReceiptsBucket/Notifications/Resource"
+   }
+  },
+  "METReceiptsBucketAllowBucketNotificationsToMETStackOCRLambdaA4005DEA38A3CC8F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "OCRLambda0B9C773A",
+      "Arn"
+     ]
+    },
+    "Principal": "s3.amazonaws.com",
+    "SourceAccount": "635054736638",
+    "SourceArn": {
+     "Fn::GetAtt": [
+      "METReceiptsBucket740CE977",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METReceiptsBucket/AllowBucketNotificationsToMETStackOCRLambdaA4005DEA"
+   }
+  },
+  "METVehiclesTableA413BB4A": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "vehicleId",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "KeySchema": [
+     {
+      "AttributeName": "userId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "vehicleId",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "met893-vehicles"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METVehiclesTable/Resource"
+   }
+  },
+  "METTripsTable679A12A9": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "tripId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "vehicleId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "tripDate",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "vehicleId-tripDate-index",
+      "KeySchema": [
+       {
+        "AttributeName": "vehicleId",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "tripDate",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "userId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "tripId",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "met893-trips"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METTripsTable/Resource"
+   }
+  },
+  "METExpensesTableD62AB05B": {
+   "Type": "AWS::DynamoDB::Table",
+   "Properties": {
+    "AttributeDefinitions": [
+     {
+      "AttributeName": "userId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "expenseId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "vehicleId",
+      "AttributeType": "S"
+     },
+     {
+      "AttributeName": "expenseDate",
+      "AttributeType": "S"
+     }
+    ],
+    "BillingMode": "PAY_PER_REQUEST",
+    "GlobalSecondaryIndexes": [
+     {
+      "IndexName": "vehicleId-expenseDate-index",
+      "KeySchema": [
+       {
+        "AttributeName": "vehicleId",
+        "KeyType": "HASH"
+       },
+       {
+        "AttributeName": "expenseDate",
+        "KeyType": "RANGE"
+       }
+      ],
+      "Projection": {
+       "ProjectionType": "ALL"
+      }
+     }
+    ],
+    "KeySchema": [
+     {
+      "AttributeName": "userId",
+      "KeyType": "HASH"
+     },
+     {
+      "AttributeName": "expenseId",
+      "KeyType": "RANGE"
+     }
+    ],
+    "TableName": "met893-expenses"
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METExpensesTable/Resource"
+   }
+  },
+  "VehiclesLambdaServiceRole8BEED67E": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/VehiclesLambda/ServiceRole/Resource"
+   }
+  },
+  "VehiclesLambdaServiceRoleDefaultPolicy1710CD3B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "VehiclesLambdaServiceRoleDefaultPolicy1710CD3B",
+    "Roles": [
+     {
+      "Ref": "VehiclesLambdaServiceRole8BEED67E"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/VehiclesLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "VehiclesLambda69B85032": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-635054736638-us-east-1",
+     "S3Key": "c8e83287bba168c24cc9272e9dfdd01b5364346aa0401badec716ed72813b9a1.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "VEHICLES_TABLE": {
+       "Ref": "METVehiclesTableA413BB4A"
+      },
+      "TRIPS_TABLE": {
+       "Ref": "METTripsTable679A12A9"
+      },
+      "EXPENSES_TABLE": {
+       "Ref": "METExpensesTableD62AB05B"
+      },
+      "RECEIPTS_BUCKET": {
+       "Ref": "METReceiptsBucket740CE977"
+      },
+      "AWS_ACCOUNT_REGION": "us-east-1"
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "VehiclesLambdaServiceRole8BEED67E",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "VehiclesLambdaServiceRoleDefaultPolicy1710CD3B",
+    "VehiclesLambdaServiceRole8BEED67E"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/VehiclesLambda/Resource",
+    "aws:asset:path": "asset.c8e83287bba168c24cc9272e9dfdd01b5364346aa0401badec716ed72813b9a1",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "TripsLambdaServiceRole769AEAFE": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/TripsLambda/ServiceRole/Resource"
+   }
+  },
+  "TripsLambdaServiceRoleDefaultPolicyD472F4B8": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "TripsLambdaServiceRoleDefaultPolicyD472F4B8",
+    "Roles": [
+     {
+      "Ref": "TripsLambdaServiceRole769AEAFE"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/TripsLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "TripsLambda73F4ECB1": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-635054736638-us-east-1",
+     "S3Key": "90ff0efe7e73b621a23b98070ff133fd09a6cc0ddcd69f3ca4c889a21f145e8a.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "VEHICLES_TABLE": {
+       "Ref": "METVehiclesTableA413BB4A"
+      },
+      "TRIPS_TABLE": {
+       "Ref": "METTripsTable679A12A9"
+      },
+      "EXPENSES_TABLE": {
+       "Ref": "METExpensesTableD62AB05B"
+      },
+      "RECEIPTS_BUCKET": {
+       "Ref": "METReceiptsBucket740CE977"
+      },
+      "AWS_ACCOUNT_REGION": "us-east-1"
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "TripsLambdaServiceRole769AEAFE",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "TripsLambdaServiceRoleDefaultPolicyD472F4B8",
+    "TripsLambdaServiceRole769AEAFE"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/TripsLambda/Resource",
+    "aws:asset:path": "asset.90ff0efe7e73b621a23b98070ff133fd09a6cc0ddcd69f3ca4c889a21f145e8a",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "ExpensesLambdaServiceRole9F15200F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/ExpensesLambda/ServiceRole/Resource"
+   }
+  },
+  "ExpensesLambdaServiceRoleDefaultPolicyFAAF4328": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METVehiclesTableA413BB4A",
+          "Arn"
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METTripsTable679A12A9",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METTripsTable679A12A9",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging",
+        "s3:Abort*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "METReceiptsBucket740CE977",
+            "Arn"
+           ]
+          },
+          "/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METReceiptsBucket740CE977",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METReceiptsBucket740CE977",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ExpensesLambdaServiceRoleDefaultPolicyFAAF4328",
+    "Roles": [
+     {
+      "Ref": "ExpensesLambdaServiceRole9F15200F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/ExpensesLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "ExpensesLambda7DDC2469": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-635054736638-us-east-1",
+     "S3Key": "c8b11aef666d1f9e619b41c5403d7e8124f6594690627ee230629f0c714856e3.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "VEHICLES_TABLE": {
+       "Ref": "METVehiclesTableA413BB4A"
+      },
+      "TRIPS_TABLE": {
+       "Ref": "METTripsTable679A12A9"
+      },
+      "EXPENSES_TABLE": {
+       "Ref": "METExpensesTableD62AB05B"
+      },
+      "RECEIPTS_BUCKET": {
+       "Ref": "METReceiptsBucket740CE977"
+      },
+      "AWS_ACCOUNT_REGION": "us-east-1"
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "ExpensesLambdaServiceRole9F15200F",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 10
+   },
+   "DependsOn": [
+    "ExpensesLambdaServiceRoleDefaultPolicyFAAF4328",
+    "ExpensesLambdaServiceRole9F15200F"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/ExpensesLambda/Resource",
+    "aws:asset:path": "asset.c8b11aef666d1f9e619b41c5403d7e8124f6594690627ee230629f0c714856e3",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "OCRLambdaServiceRole3BCAFC32": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/OCRLambda/ServiceRole/Resource"
+   }
+  },
+  "OCRLambdaServiceRoleDefaultPolicyD7D4D91D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetObject*",
+        "s3:GetBucket*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METReceiptsBucket740CE977",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METReceiptsBucket740CE977",
+             "Arn"
+            ]
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:Query",
+        "dynamodb:GetItem",
+        "dynamodb:Scan",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::GetAtt": [
+          "METExpensesTableD62AB05B",
+          "Arn"
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::GetAtt": [
+             "METExpensesTableD62AB05B",
+             "Arn"
+            ]
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "textract:AnalyzeExpense",
+        "textract:DetectDocumentText"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "OCRLambdaServiceRoleDefaultPolicyD7D4D91D",
+    "Roles": [
+     {
+      "Ref": "OCRLambdaServiceRole3BCAFC32"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/OCRLambda/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "OCRLambda0B9C773A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": "cdk-hnb659fds-assets-635054736638-us-east-1",
+     "S3Key": "7b39ceee67fc1b526f614339073ca3c8b0993e46462b0cf9639f6f987b9b6628.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "VEHICLES_TABLE": {
+       "Ref": "METVehiclesTableA413BB4A"
+      },
+      "TRIPS_TABLE": {
+       "Ref": "METTripsTable679A12A9"
+      },
+      "EXPENSES_TABLE": {
+       "Ref": "METExpensesTableD62AB05B"
+      },
+      "RECEIPTS_BUCKET": {
+       "Ref": "METReceiptsBucket740CE977"
+      },
+      "AWS_ACCOUNT_REGION": "us-east-1"
+     }
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "OCRLambdaServiceRole3BCAFC32",
+      "Arn"
+     ]
+    },
+    "Runtime": "nodejs20.x",
+    "Timeout": 30
+   },
+   "DependsOn": [
+    "OCRLambdaServiceRoleDefaultPolicyD7D4D91D",
+    "OCRLambdaServiceRole3BCAFC32"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/OCRLambda/Resource",
+    "aws:asset:path": "asset.7b39ceee67fc1b526f614339073ca3c8b0993e46462b0cf9639f6f987b9b6628",
+    "aws:asset:is-bundled": true,
+    "aws:asset:property": "Code"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "s3:PutBucketNotification",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "METReceiptsBucket740CE977",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "Roles": [
+     {
+      "Ref": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource"
+   }
+  },
+  "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Description": "AWS CloudFormation handler for \"Custom::S3BucketNotifications\" resources (@aws-cdk/aws-s3)",
+    "Code": {
+     "ZipFile": "import boto3  # type: ignore\nimport json\nimport logging\nimport urllib.request\n\ns3 = boto3.client(\"s3\")\n\nEVENTBRIDGE_CONFIGURATION = 'EventBridgeConfiguration'\nCONFIGURATION_TYPES = [\"TopicConfigurations\", \"QueueConfigurations\", \"LambdaFunctionConfigurations\"]\n\ndef handler(event: dict, context):\n  response_status = \"SUCCESS\"\n  error_message = \"\"\n  try:\n    props = event[\"ResourceProperties\"]\n    notification_configuration = props[\"NotificationConfiguration\"]\n    managed = props.get('Managed', 'true').lower() == 'true'\n    skipDestinationValidation = props.get('SkipDestinationValidation', 'false').lower() == 'true'\n    stack_id = event['StackId']\n    old = event.get(\"OldResourceProperties\", {}).get(\"NotificationConfiguration\", {})\n    if managed:\n      config = handle_managed(event[\"RequestType\"], notification_configuration)\n    else:\n      config = handle_unmanaged(props[\"BucketName\"], stack_id, event[\"RequestType\"], notification_configuration, old)\n    s3.put_bucket_notification_configuration(Bucket=props[\"BucketName\"], NotificationConfiguration=config, SkipDestinationValidation=skipDestinationValidation)\n  except Exception as e:\n    logging.exception(\"Failed to put bucket notification configuration\")\n    response_status = \"FAILED\"\n    error_message = f\"Error: {str(e)}. \"\n  finally:\n    submit_response(event, context, response_status, error_message)\n\ndef handle_managed(request_type, notification_configuration):\n  if request_type == 'Delete':\n    return {}\n  return notification_configuration\n\ndef handle_unmanaged(bucket, stack_id, request_type, notification_configuration, old):\n  def get_id(n):\n    n['Id'] = ''\n    sorted_notifications = sort_filter_rules(n)\n    strToHash=json.dumps(sorted_notifications, sort_keys=True).replace('\"Name\": \"prefix\"', '\"Name\": \"Prefix\"').replace('\"Name\": \"suffix\"', '\"Name\": \"Suffix\"')\n    return f\"{stack_id}-{hash(strToHash)}\"\n  def with_id(n):\n    n['Id'] = get_id(n)\n    return n\n\n  external_notifications = {}\n  existing_notifications = s3.get_bucket_notification_configuration(Bucket=bucket)\n  for t in CONFIGURATION_TYPES:\n    if request_type == 'Update':\n        old_incoming_ids = [get_id(n) for n in old.get(t, [])]\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not get_id(n) in old_incoming_ids]      \n    elif request_type == 'Delete':\n        external_notifications[t] = [n for n in existing_notifications.get(t, []) if not n['Id'].startswith(f\"{stack_id}-\")]\n    elif request_type == 'Create':\n        external_notifications[t] = [n for n in existing_notifications.get(t, [])]\n  if EVENTBRIDGE_CONFIGURATION in existing_notifications:\n    external_notifications[EVENTBRIDGE_CONFIGURATION] = existing_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  if request_type == 'Delete':\n    return external_notifications\n\n  notifications = {}\n  for t in CONFIGURATION_TYPES:\n    external = external_notifications.get(t, [])\n    incoming = [with_id(n) for n in notification_configuration.get(t, [])]\n    notifications[t] = external + incoming\n\n  if EVENTBRIDGE_CONFIGURATION in notification_configuration:\n    notifications[EVENTBRIDGE_CONFIGURATION] = notification_configuration[EVENTBRIDGE_CONFIGURATION]\n  elif EVENTBRIDGE_CONFIGURATION in external_notifications:\n    notifications[EVENTBRIDGE_CONFIGURATION] = external_notifications[EVENTBRIDGE_CONFIGURATION]\n\n  return notifications\n\ndef submit_response(event: dict, context, response_status: str, error_message: str):\n  response_body = json.dumps(\n    {\n      \"Status\": response_status,\n      \"Reason\": f\"{error_message}See the details in CloudWatch Log Stream: {context.log_stream_name}\",\n      \"PhysicalResourceId\": event.get(\"PhysicalResourceId\") or event[\"LogicalResourceId\"],\n      \"StackId\": event[\"StackId\"],\n      \"RequestId\": event[\"RequestId\"],\n      \"LogicalResourceId\": event[\"LogicalResourceId\"],\n      \"NoEcho\": False,\n    }\n  ).encode(\"utf-8\")\n  headers = {\"content-type\": \"\", \"content-length\": str(len(response_body))}\n  try:\n    req = urllib.request.Request(url=event[\"ResponseURL\"], headers=headers, data=response_body, method=\"PUT\")\n    with urllib.request.urlopen(req) as response:\n      print(response.read().decode(\"utf-8\"))\n    print(\"Status code: \" + response.reason)\n  except Exception as e:\n      print(\"send(..) failed executing request.urlopen(..): \" + str(e))\n\ndef sort_filter_rules(json_obj):\n  if not isinstance(json_obj, dict):\n      return json_obj\n  for key, value in json_obj.items():\n      if isinstance(value, dict):\n          json_obj[key] = sort_filter_rules(value)\n      elif isinstance(value, list):\n          json_obj[key] = [sort_filter_rules(item) for item in value]\n  if \"Filter\" in json_obj and \"Key\" in json_obj[\"Filter\"] and \"FilterRules\" in json_obj[\"Filter\"][\"Key\"]:\n      filter_rules = json_obj[\"Filter\"][\"Key\"][\"FilterRules\"]\n      sorted_filter_rules = sorted(filter_rules, key=lambda x: x[\"Name\"])\n      json_obj[\"Filter\"][\"Key\"][\"FilterRules\"] = sorted_filter_rules\n  return json_obj"
+    },
+    "Handler": "index.handler",
+    "Role": {
+     "Fn::GetAtt": [
+      "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.13",
+    "Timeout": 300
+   },
+   "DependsOn": [
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36",
+    "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource"
+   }
+  },
+  "METAuthenticatedRoleBC604ED7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRoleWithWebIdentity",
+       "Condition": {
+        "StringEquals": {
+         "cognito-identity.amazonaws.com:aud": {
+          "Ref": "METIdentityPool"
+         }
+        },
+        "ForAnyValue:StringLike": {
+         "cognito-identity.amazonaws.com:amr": "authenticated"
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Federated": "cognito-identity.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Temporary creds for authenticated MET mobile app users"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAuthenticatedRole/Resource"
+   }
+  },
+  "METAuthenticatedRoleDefaultPolicy394B5612": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:PutObject",
+        "s3:GetObject"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          {
+           "Fn::GetAtt": [
+            "METReceiptsBucket740CE977",
+            "Arn"
+           ]
+          },
+          "/receipts/${cognito-identity.amazonaws.com:sub}/*"
+         ]
+        ]
+       },
+       "Sid": "ReceiptUpload"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "METAuthenticatedRoleDefaultPolicy394B5612",
+    "Roles": [
+     {
+      "Ref": "METAuthenticatedRoleBC604ED7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAuthenticatedRole/DefaultPolicy/Resource"
+   }
+  },
+  "METIdentityPoolRoles": {
+   "Type": "AWS::Cognito::IdentityPoolRoleAttachment",
+   "Properties": {
+    "IdentityPoolId": {
+     "Ref": "METIdentityPool"
+    },
+    "Roles": {
+     "authenticated": {
+      "Fn::GetAtt": [
+       "METAuthenticatedRoleBC604ED7",
+       "Arn"
+      ]
+     }
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METIdentityPoolRoles"
+   }
+  },
+  "METAPIAD5E595F": {
+   "Type": "AWS::ApiGateway::RestApi",
+   "Properties": {
+    "Description": "Mileage & expense tracker REST API",
+    "Name": "met893-api"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Resource"
+   }
+  },
+  "METAPICloudWatchRole47B1FE99": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "apigateway.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs"
+       ]
+      ]
+     }
+    ]
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/CloudWatchRole/Resource"
+   }
+  },
+  "METAPIAccount539F92EF": {
+   "Type": "AWS::ApiGateway::Account",
+   "Properties": {
+    "CloudWatchRoleArn": {
+     "Fn::GetAtt": [
+      "METAPICloudWatchRole47B1FE99",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "METAPIAD5E595F"
+   ],
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Account"
+   }
+  },
+  "METAPIDeployment5ACF30ACc0cfba3f7ba18a35300f94232599bc90": {
+   "Type": "AWS::ApiGateway::Deployment",
+   "Properties": {
+    "Description": "Mileage & expense tracker REST API",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "DependsOn": [
+    "METAPIexpensesexpenseIdDELETE4A8F6D4E",
+    "METAPIexpensesexpenseIdOPTIONSF0AF25F9",
+    "METAPIexpensesexpenseIdPUTDFF8983B",
+    "METAPIexpensesexpenseId9F8D0599",
+    "METAPIexpensesGET0937B364",
+    "METAPIexpensesOPTIONS72BB73AA",
+    "METAPIexpensesPOST37032F5B",
+    "METAPIexpenses6AEEC71E",
+    "METAPIOPTIONS42649521",
+    "METAPItripstripIdDELETEFE74C7B4",
+    "METAPItripstripIdOPTIONSD50B2DCA",
+    "METAPItripstripIdPUTD9435836",
+    "METAPItripstripId65661727",
+    "METAPItripsGET6DB66D01",
+    "METAPItripsOPTIONS421B1A76",
+    "METAPItripsPOST54A742D6",
+    "METAPItrips33E77772",
+    "METAPIvehiclesvehicleIdDELETEE5EAAA76",
+    "METAPIvehiclesvehicleIdOPTIONS97EF3191",
+    "METAPIvehiclesvehicleIdPUTE8939C5E",
+    "METAPIvehiclesvehicleId87E62EE4",
+    "METAPIvehiclesGETB7D31578",
+    "METAPIvehiclesOPTIONS8F9BDE92",
+    "METAPIvehiclesPOSTEBC778B2",
+    "METAPIvehicles25798941"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Deployment/Resource",
+    "aws:cdk:do-not-refactor": true
+   }
+  },
+  "METAPIDeploymentStageprodF4FC19AC": {
+   "Type": "AWS::ApiGateway::Stage",
+   "Properties": {
+    "DeploymentId": {
+     "Ref": "METAPIDeployment5ACF30ACc0cfba3f7ba18a35300f94232599bc90"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    },
+    "StageName": "prod"
+   },
+   "DependsOn": [
+    "METAPIAccount539F92EF"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/DeploymentStage.prod/Resource"
+   }
+  },
+  "METAPIOPTIONS42649521": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Fn::GetAtt": [
+      "METAPIAD5E595F",
+      "RootResourceId"
+     ]
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/OPTIONS/Resource"
+   }
+  },
+  "METAPIvehicles25798941": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "METAPIAD5E595F",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "vehicles",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/Resource"
+   }
+  },
+  "METAPIvehiclesOPTIONS8F9BDE92": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPIvehicles25798941"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/OPTIONS/Resource"
+   }
+  },
+  "METAPIvehiclesGETApiPermissionMETStackMETAPIBB0E9E59GETvehicles4EAEE7FE": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/GET/vehicles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..vehicles"
+   }
+  },
+  "METAPIvehiclesGETApiPermissionTestMETStackMETAPIBB0E9E59GETvehicles71E79DEC": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/GET/vehicles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..vehicles"
+   }
+  },
+  "METAPIvehiclesGETB7D31578": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "VehiclesLambda69B85032",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIvehicles25798941"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/GET/Resource"
+   }
+  },
+  "METAPIvehiclesPOSTApiPermissionMETStackMETAPIBB0E9E59POSTvehicles063232D1": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/POST/vehicles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..vehicles"
+   }
+  },
+  "METAPIvehiclesPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTvehicles06A9CB9E": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/POST/vehicles"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..vehicles"
+   }
+  },
+  "METAPIvehiclesPOSTEBC778B2": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "VehiclesLambda69B85032",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIvehicles25798941"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/POST/Resource"
+   }
+  },
+  "METAPIvehiclesvehicleId87E62EE4": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "METAPIvehicles25798941"
+    },
+    "PathPart": "{vehicleId}",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/Resource"
+   }
+  },
+  "METAPIvehiclesvehicleIdOPTIONS97EF3191": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPIvehiclesvehicleId87E62EE4"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/OPTIONS/Resource"
+   }
+  },
+  "METAPIvehiclesvehicleIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTvehiclesvehicleId1FBF68C6": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/PUT/vehicles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..vehicles.{vehicleId}"
+   }
+  },
+  "METAPIvehiclesvehicleIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTvehiclesvehicleId53A25EBA": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/PUT/vehicles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..vehicles.{vehicleId}"
+   }
+  },
+  "METAPIvehiclesvehicleIdPUTE8939C5E": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "VehiclesLambda69B85032",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIvehiclesvehicleId87E62EE4"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/PUT/Resource"
+   }
+  },
+  "METAPIvehiclesvehicleIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEvehiclesvehicleId3DB16727": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/DELETE/vehicles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..vehicles.{vehicleId}"
+   }
+  },
+  "METAPIvehiclesvehicleIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEvehiclesvehicleId97E7EA59": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "VehiclesLambda69B85032",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/DELETE/vehicles/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..vehicles.{vehicleId}"
+   }
+  },
+  "METAPIvehiclesvehicleIdDELETEE5EAAA76": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "VehiclesLambda69B85032",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIvehiclesvehicleId87E62EE4"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/vehicles/{vehicleId}/DELETE/Resource"
+   }
+  },
+  "METAPItrips33E77772": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "METAPIAD5E595F",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "trips",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/Resource"
+   }
+  },
+  "METAPItripsOPTIONS421B1A76": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPItrips33E77772"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/OPTIONS/Resource"
+   }
+  },
+  "METAPItripsGETApiPermissionMETStackMETAPIBB0E9E59GETtrips9715FEA1": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/GET/trips"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..trips"
+   }
+  },
+  "METAPItripsGETApiPermissionTestMETStackMETAPIBB0E9E59GETtrips7A1AEA8F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/GET/trips"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..trips"
+   }
+  },
+  "METAPItripsGET6DB66D01": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TripsLambda73F4ECB1",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPItrips33E77772"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/GET/Resource"
+   }
+  },
+  "METAPItripsPOSTApiPermissionMETStackMETAPIBB0E9E59POSTtrips156A6952": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/POST/trips"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..trips"
+   }
+  },
+  "METAPItripsPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTtrips7192D9C0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/POST/trips"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..trips"
+   }
+  },
+  "METAPItripsPOST54A742D6": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TripsLambda73F4ECB1",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPItrips33E77772"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/POST/Resource"
+   }
+  },
+  "METAPItripstripId65661727": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "METAPItrips33E77772"
+    },
+    "PathPart": "{tripId}",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/Resource"
+   }
+  },
+  "METAPItripstripIdOPTIONSD50B2DCA": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPItripstripId65661727"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/OPTIONS/Resource"
+   }
+  },
+  "METAPItripstripIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTtripstripId9CAAFE45": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/PUT/trips/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..trips.{tripId}"
+   }
+  },
+  "METAPItripstripIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTtripstripIdE59FAA09": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/PUT/trips/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..trips.{tripId}"
+   }
+  },
+  "METAPItripstripIdPUTD9435836": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TripsLambda73F4ECB1",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPItripstripId65661727"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/PUT/Resource"
+   }
+  },
+  "METAPItripstripIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEtripstripId325E99C4": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/DELETE/trips/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..trips.{tripId}"
+   }
+  },
+  "METAPItripstripIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEtripstripIdBA8C5423": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "TripsLambda73F4ECB1",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/DELETE/trips/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..trips.{tripId}"
+   }
+  },
+  "METAPItripstripIdDELETEFE74C7B4": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "TripsLambda73F4ECB1",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPItripstripId65661727"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/trips/{tripId}/DELETE/Resource"
+   }
+  },
+  "METAPIexpenses6AEEC71E": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Fn::GetAtt": [
+      "METAPIAD5E595F",
+      "RootResourceId"
+     ]
+    },
+    "PathPart": "expenses",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/Resource"
+   }
+  },
+  "METAPIexpensesOPTIONS72BB73AA": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPIexpenses6AEEC71E"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/OPTIONS/Resource"
+   }
+  },
+  "METAPIexpensesGETApiPermissionMETStackMETAPIBB0E9E59GETexpensesE38C8884": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/GET/expenses"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/GET/ApiPermission.METStackMETAPIBB0E9E59.GET..expenses"
+   }
+  },
+  "METAPIexpensesGETApiPermissionTestMETStackMETAPIBB0E9E59GETexpenses58E81C5F": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/GET/expenses"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/GET/ApiPermission.Test.METStackMETAPIBB0E9E59.GET..expenses"
+   }
+  },
+  "METAPIexpensesGET0937B364": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "GET",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "ExpensesLambda7DDC2469",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIexpenses6AEEC71E"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/GET/Resource"
+   }
+  },
+  "METAPIexpensesPOSTApiPermissionMETStackMETAPIBB0E9E59POSTexpenses7DD637B0": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/POST/expenses"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/POST/ApiPermission.METStackMETAPIBB0E9E59.POST..expenses"
+   }
+  },
+  "METAPIexpensesPOSTApiPermissionTestMETStackMETAPIBB0E9E59POSTexpenses820AB530": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/POST/expenses"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/POST/ApiPermission.Test.METStackMETAPIBB0E9E59.POST..expenses"
+   }
+  },
+  "METAPIexpensesPOST37032F5B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "POST",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "ExpensesLambda7DDC2469",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIexpenses6AEEC71E"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/POST/Resource"
+   }
+  },
+  "METAPIexpensesexpenseId9F8D0599": {
+   "Type": "AWS::ApiGateway::Resource",
+   "Properties": {
+    "ParentId": {
+     "Ref": "METAPIexpenses6AEEC71E"
+    },
+    "PathPart": "{expenseId}",
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/Resource"
+   }
+  },
+  "METAPIexpensesexpenseIdOPTIONSF0AF25F9": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "ApiKeyRequired": false,
+    "AuthorizationType": "NONE",
+    "HttpMethod": "OPTIONS",
+    "Integration": {
+     "IntegrationResponses": [
+      {
+       "ResponseParameters": {
+        "method.response.header.Access-Control-Allow-Headers": "'Content-Type,Authorization'",
+        "method.response.header.Access-Control-Allow-Origin": "'*'",
+        "method.response.header.Access-Control-Allow-Methods": "'OPTIONS,GET,PUT,POST,DELETE,PATCH,HEAD'"
+       },
+       "StatusCode": "204"
+      }
+     ],
+     "RequestTemplates": {
+      "application/json": "{ statusCode: 200 }"
+     },
+     "Type": "MOCK"
+    },
+    "MethodResponses": [
+     {
+      "ResponseParameters": {
+       "method.response.header.Access-Control-Allow-Headers": true,
+       "method.response.header.Access-Control-Allow-Origin": true,
+       "method.response.header.Access-Control-Allow-Methods": true
+      },
+      "StatusCode": "204"
+     }
+    ],
+    "ResourceId": {
+     "Ref": "METAPIexpensesexpenseId9F8D0599"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/OPTIONS/Resource"
+   }
+  },
+  "METAPIexpensesexpenseIdPUTApiPermissionMETStackMETAPIBB0E9E59PUTexpensesexpenseId50F8DFF8": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/PUT/expenses/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/PUT/ApiPermission.METStackMETAPIBB0E9E59.PUT..expenses.{expenseId}"
+   }
+  },
+  "METAPIexpensesexpenseIdPUTApiPermissionTestMETStackMETAPIBB0E9E59PUTexpensesexpenseIdD7C40EBE": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/PUT/expenses/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/PUT/ApiPermission.Test.METStackMETAPIBB0E9E59.PUT..expenses.{expenseId}"
+   }
+  },
+  "METAPIexpensesexpenseIdPUTDFF8983B": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "PUT",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "ExpensesLambda7DDC2469",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIexpensesexpenseId9F8D0599"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/PUT/Resource"
+   }
+  },
+  "METAPIexpensesexpenseIdDELETEApiPermissionMETStackMETAPIBB0E9E59DELETEexpensesexpenseId0B991CC6": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/",
+       {
+        "Ref": "METAPIDeploymentStageprodF4FC19AC"
+       },
+       "/DELETE/expenses/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/DELETE/ApiPermission.METStackMETAPIBB0E9E59.DELETE..expenses.{expenseId}"
+   }
+  },
+  "METAPIexpensesexpenseIdDELETEApiPermissionTestMETStackMETAPIBB0E9E59DELETEexpensesexpenseId8D6C05AC": {
+   "Type": "AWS::Lambda::Permission",
+   "Properties": {
+    "Action": "lambda:InvokeFunction",
+    "FunctionName": {
+     "Fn::GetAtt": [
+      "ExpensesLambda7DDC2469",
+      "Arn"
+     ]
+    },
+    "Principal": "apigateway.amazonaws.com",
+    "SourceArn": {
+     "Fn::Join": [
+      "",
+      [
+       "arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":execute-api:us-east-1:635054736638:",
+       {
+        "Ref": "METAPIAD5E595F"
+       },
+       "/test-invoke-stage/DELETE/expenses/*"
+      ]
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/DELETE/ApiPermission.Test.METStackMETAPIBB0E9E59.DELETE..expenses.{expenseId}"
+   }
+  },
+  "METAPIexpensesexpenseIdDELETE4A8F6D4E": {
+   "Type": "AWS::ApiGateway::Method",
+   "Properties": {
+    "AuthorizationType": "COGNITO_USER_POOLS",
+    "AuthorizerId": {
+     "Ref": "METAuthorizerB3411837"
+    },
+    "HttpMethod": "DELETE",
+    "Integration": {
+     "IntegrationHttpMethod": "POST",
+     "Type": "AWS_PROXY",
+     "Uri": {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":apigateway:us-east-1:lambda:path/2015-03-31/functions/",
+        {
+         "Fn::GetAtt": [
+          "ExpensesLambda7DDC2469",
+          "Arn"
+         ]
+        },
+        "/invocations"
+       ]
+      ]
+     }
+    },
+    "ResourceId": {
+     "Ref": "METAPIexpensesexpenseId9F8D0599"
+    },
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAPI/Default/expenses/{expenseId}/DELETE/Resource"
+   }
+  },
+  "METAuthorizerB3411837": {
+   "Type": "AWS::ApiGateway::Authorizer",
+   "Properties": {
+    "IdentitySource": "method.request.header.Authorization",
+    "Name": "met893-cognito-authorizer",
+    "ProviderARNs": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":cognito-idp:us-east-1:635054736638:userpool/us-east-1_9v0zP2VID"
+       ]
+      ]
+     }
+    ],
+    "RestApiId": {
+     "Ref": "METAPIAD5E595F"
+    },
+    "Type": "COGNITO_USER_POOLS"
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/METAuthorizer/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/3VR207DMAz9Ft6zUIr4gG4IxAMwdfA8ZanXeUuTqnaYStR/R0nbcZF4Osd2Tmwf5zK/u5HZlTrTQlenhcGdDBtW+iRKIOc7DUKdaRu0qy2yk+GdoFs7Z1YGwbJY7e3/mcfO+TYmniqwjNzH5N+4dAYKZqUPDVgeBN3KsPT6BOmriY2wVASDMKrZVUqG1d6uoWuQCJ2Nbx+81YzODqLqrWpctZPhTe0MxGIis3hrXQVHki8JZp1A1cgQ54mChGtnUPcxHFkcb6uIgEkWEYRqsVYMZ9XLUAJx0WJSf9NCa+cti3tojeubyaMf0YZVnVqOZDY+biuegQ+uisWJXc4yNpn4eJ3Zdyo8H1yHn9ClAS7RMPySpQ1iU7R1LLx6bj0PIrojj3T9kWcyz2R2dSTERectYwOyHPEL7mCdjDsCAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "METStack/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "METAPIEndpoint14774321": {
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "METAPIAD5E595F"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "METAPIDeploymentStageprodF4FC19AC"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "ApiUrl": {
+   "Description": "API Gateway base URL",
+   "Value": {
+    "Fn::Join": [
+     "",
+     [
+      "https://",
+      {
+       "Ref": "METAPIAD5E595F"
+      },
+      ".execute-api.us-east-1.",
+      {
+       "Ref": "AWS::URLSuffix"
+      },
+      "/",
+      {
+       "Ref": "METAPIDeploymentStageprodF4FC19AC"
+      },
+      "/"
+     ]
+    ]
+   }
+  },
+  "UserPoolId": {
+   "Description": "Cognito User Pool ID (shared with dliv.com)",
+   "Value": "us-east-1_9v0zP2VID"
+  },
+  "UserPoolClientId": {
+   "Description": "MET mobile app client ID",
+   "Value": {
+    "Ref": "DlivUserPoolMETMobileClient17E92538"
+   }
+  },
+  "IdentityPoolId": {
+   "Description": "MET Identity Pool ID",
+   "Value": {
+    "Ref": "METIdentityPool"
+   }
+  },
+  "ReceiptsBucketName": {
+   "Description": "S3 bucket for receipt images",
+   "Value": {
+    "Ref": "METReceiptsBucket740CE977"
+   }
+  },
+  "VehiclesTableName": {
+   "Description": "DynamoDB vehicles table",
+   "Value": {
+    "Ref": "METVehiclesTableA413BB4A"
+   }
+  },
+  "TripsTableName": {
+   "Description": "DynamoDB trips table",
+   "Value": {
+    "Ref": "METTripsTable679A12A9"
+   }
+  },
+  "ExpensesTableName": {
+   "Description": "DynamoDB expenses table",
+   "Value": {
+    "Ref": "METExpensesTableD62AB05B"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

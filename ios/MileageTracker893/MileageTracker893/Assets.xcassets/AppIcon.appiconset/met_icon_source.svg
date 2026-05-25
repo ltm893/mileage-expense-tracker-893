@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+
+  <rect width="1024" height="1024" fill="#1A2F4A"/>
+
+  <polygon points="512,440 730,940 294,940" fill="#EEF8FA" opacity="0.06"/>
+  <rect x="502" y="470" width="20" height="76" rx="6" fill="#EEF8FA" opacity="0.18"/>
+  <rect x="502" y="566" width="20" height="76" rx="6" fill="#EEF8FA" opacity="0.12"/>
+  <rect x="502" y="662" width="20" height="76" rx="6" fill="#EEF8FA" opacity="0.07"/>
+
+  <circle cx="512" cy="480" r="310" fill="none" stroke="#114B5F" stroke-width="66"/>
+  <path d="M 234,748 A 310,310 0 1,1 790,748"
+        fill="none" stroke="#1ABCBA" stroke-width="66" stroke-linecap="round"/>
+
+  <line x1="252" y1="710" x2="293" y2="665" stroke="#EEF8FA" stroke-width="9" stroke-linecap="round" opacity="0.5"/>
+  <line x1="202" y1="516" x2="254" y2="507" stroke="#EEF8FA" stroke-width="9" stroke-linecap="round" opacity="0.5"/>
+  <line x1="512" y1="172" x2="512" y2="220" stroke="#EEF8FA" stroke-width="9" stroke-linecap="round" opacity="0.5"/>
+  <line x1="822" y1="516" x2="770" y2="507" stroke="#EEF8FA" stroke-width="9" stroke-linecap="round" opacity="0.5"/>
+  <line x1="772" y1="710" x2="731" y2="665" stroke="#EEF8FA" stroke-width="9" stroke-linecap="round" opacity="0.5"/>
+
+  <line x1="474" y1="510" x2="692" y2="298"
+        stroke="#F5A623" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="512" cy="480" r="28" fill="#F5C842"/>
+  <circle cx="512" cy="480" r="14" fill="#1A2F4A"/>
+
+</svg>
