@@ -90,6 +90,14 @@ STACK_NAME="MileageExpenseStack-${ID_PREFIX}"
 CLIENT_NAME="${ID_PREFIX}-met-client"
 API_NAME="${ID_PREFIX}-mileage-expense-api"
 
+# State file — persists API Gateway ID between deploys so it is never lost.
+# Gitignored alongside met_outputs.json.
+STATE_FILE="${REPO_ROOT}/.met_deploy_state"
+SAVED_API_ID=""
+if [ -f "$STATE_FILE" ]; then
+  SAVED_API_ID=$(grep -E '^api_id=' "$STATE_FILE" | cut -d= -f2 || true)
+fi
+
 echo "  Stack:         $STACK_NAME"
 echo "  Region:        $AWS_REGION"
 echo "  ID prefix:     $ID_PREFIX"
@@ -139,6 +147,18 @@ if [ -n "$EXISTING_API_ID" ] && [ "$EXISTING_API_ID" != "None" ]; then
   echo "  ✅ API Gateway exists: $EXISTING_API_ID"
   MET_API_ID="$EXISTING_API_ID"
 
+  # Warn if the live ID differs from saved state — means it was recreated
+  # and any installed iOS apps will be broken until rebuilt.
+  if [ -n "$SAVED_API_ID" ] && [ "$SAVED_API_ID" != "$MET_API_ID" ]; then
+    echo ""
+    echo "  ⚠️  WARNING: API Gateway ID has changed!"
+    echo "     Saved:  $SAVED_API_ID"
+    echo "     Live:   $MET_API_ID"
+    echo "     Any installed iOS apps with the old met_outputs.json will be broken."
+    echo "     You must rebuild and reinstall the iOS app after this deploy."
+    echo ""
+  fi
+
   # Fetch root resource ID so CDK can import the API without a custom resource
   MET_API_ROOT_ID=$(aws apigateway get-resources \
     --rest-api-id "$MET_API_ID" \
@@ -147,7 +167,17 @@ if [ -n "$EXISTING_API_ID" ] && [ "$EXISTING_API_ID" != "None" ]; then
     --output text)
   echo "  ✅ Root resource ID:   $MET_API_ROOT_ID"
 else
-  echo "  ℹ️  API Gateway not found — CDK will create it on first deploy."
+  if [ -n "$SAVED_API_ID" ]; then
+    echo ""
+    echo "  ⚠️  WARNING: Saved API ID '$SAVED_API_ID' no longer exists in AWS!"
+    echo "     The API Gateway was deleted. CDK will create a new one."
+    echo "     You MUST rebuild and reinstall the iOS app after this deploy."
+    echo ""
+    read -p "  Continue and create a new API Gateway? (y/n): " API_CONFIRM
+    if [[ "$API_CONFIRM" != "y" && "$API_CONFIRM" != "Y" ]]; then echo "  Cancelled."; exit 0; fi
+  else
+    echo "  ℹ️  API Gateway not found — CDK will create it on first deploy."
+  fi
   MET_API_ID=""
   MET_API_ROOT_ID=""
 fi
@@ -181,16 +211,20 @@ MET_API_ID="$MET_API_ID" \
 MET_API_ROOT_ID="$MET_API_ROOT_ID" \
   npx cdk deploy --require-approval never
 
-# ── Re-check API Gateway ID (if CDK just created it) ─────────────────────────
-if [ -z "$MET_API_ID" ]; then
-  echo ""
-  echo "  Resolving new API Gateway ID..."
-  MET_API_ID=$(aws apigateway get-rest-apis \
-    --region "$AWS_REGION" \
-    --query "items[?name=='${API_NAME}'].id" \
-    --output text)
-  echo "  ✅ API Gateway created: $MET_API_ID"
+# ── Re-check API Gateway ID (always verify from AWS after deploy) ────────────
+# Always re-resolve from AWS after CDK runs — never trust the pre-deploy ID.
+# This prevents met_outputs.json from being written with a stale/deleted API ID.
+echo ""
+echo "  Verifying API Gateway ID post-deploy..."
+MET_API_ID=$(aws apigateway get-rest-apis \
+  --region "$AWS_REGION" \
+  --query "items[?name=='${API_NAME}'].id" \
+  --output text)
+if [ -z "$MET_API_ID" ] || [ "$MET_API_ID" == "None" ]; then
+  echo "  ❌ Could not resolve API Gateway ID after deploy. Check CloudFormation console."
+  exit 1
 fi
+echo "  ✅ API Gateway ID: $MET_API_ID"
 
 # ── Capture CloudFormation outputs ───────────────────────────────────────────
 get_output() {
@@ -236,6 +270,13 @@ EOF
 
 echo ""
 echo "  ✅ met_outputs.json written to repo root"
+
+# ── Save state file ──────────────────────────────────────────────────────
+cat > "$STATE_FILE" << EOF
+api_id=${MET_API_ID}
+client_id=${MET_CLIENT_ID}
+EOF
+echo "  ✅ Deploy state saved to .met_deploy_state"
 echo ""
 echo "  ────────────────────────────────────────────────────"
 echo "  API URL:         $API_URL"
