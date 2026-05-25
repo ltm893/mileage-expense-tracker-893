@@ -241,11 +241,10 @@ export class MileageExpenseStack extends cdk.Stack {
     expense.addMethod("DELETE", new apigateway.LambdaIntegration(expensesLambda), authOptions);
 
     // ── Outputs ───────────────────────────────────────────────────────────────
-    // When API is imported (metApiId set), api.url is not available on IRestApi.
-    // Reconstruct the URL from the known ID and region instead.
-    const apiUrl = metApiId
-      ? `https://${metApiId}.execute-api.${base.aws_region}.amazonaws.com/prod/`
-      : (api as apigateway.RestApi).url;
+    // Always reconstruct the URL from the actual API ID — never rely on
+    // api.url from an imported IRestApi as it may reflect a stale/deleted ID.
+    const resolvedApiId = metApiId ?? (api as apigateway.RestApi).restApiId;
+    const apiUrl = `https://${resolvedApiId}.execute-api.${base.aws_region}.amazonaws.com/prod/`;
 
     new cdk.CfnOutput(this, "METApiUrl",        { value: apiUrl });
     new cdk.CfnOutput(this, "METUserPoolId",     { value: userPool.userPoolId });

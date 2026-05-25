@@ -365,12 +365,14 @@ struct TripDetailView: View {
         isSaving = true
         let startOdo = Double(startOdometer) ?? 0
         let endOdo   = Double(endOdometer)   ?? 0
+
+        // Use exactly what the user typed — empty field means zero, not "keep old value".
+        // This allows clearing odometer fields when switching to GPS-only.
         let odoDistSave: Double = {
             if endOdo > startOdo && startOdo > 0 { return endOdo - startOdo }
-            if let manual = Double(odometerDistance), manual > 0 { return manual }
-            return trip.odometerDistance
+            return Double(odometerDistance) ?? 0
         }()
-        let gpsDist = Double(gpsDistance) ?? trip.gpsDistance
+        let gpsDist = Double(gpsDistance) ?? 0
         do {
             let body = UpdateTripRequest(
                 vehicleId:        selectedVehicleId,

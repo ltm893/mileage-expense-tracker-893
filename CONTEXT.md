@@ -49,14 +49,14 @@ BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
 - `backend/lambda/ocr/` — S3 trigger → Textract
 - `backend/scripts/deploy.sh` — idempotent pre-checks, env var overrides, writes met_outputs.json
 
-## Deployed values — dliv893 (your personal deployment on dlivFriendsProd)
-- Stack:           MileageExpenseStack-dliv893
-- API Gateway:     a4zm91fvsl — https://a4zm91fvsl.execute-api.us-east-1.amazonaws.com/prod/
-- User Pool:       us-east-1_A4MFXeYS7 (dlivFriendsProd)
-- App Client:      7d9fi2r1ksr3u127mmjj4tmh1b (dliv893-met-client)
-- Identity Pool:   us-east-1:479c2bb8-9c6a-4bc6-a86a-194547716177
-- Receipts bucket: dliv893-met-receipts
-- Tables:          dliv893-met-vehicles, dliv893-met-trips, dliv893-met-expenses
+## Deployed values — apps-893 (current active deployment on us-east-1_Iijv2ET6V)
+- Stack:           MileageExpenseStack-apps-893
+- API Gateway:     n5154qou80 — https://n5154qou80.execute-api.us-east-1.amazonaws.com/prod/
+- User Pool:       us-east-1_Iijv2ET6V
+- App Client:      1d0mnj8j3o26hih4sjdomub19t (apps-893-met-client)
+- Identity Pool:   us-east-1:cd8da7d7-bfb5-48c8-bcaf-1021020185b6
+- Receipts bucket: apps-893-met-receipts
+- Tables:          apps-893-met-vehicles, apps-893-met-trips, apps-893-met-expenses
 
 ## Old deployed values — met893 (deprecated, on dlivFriendsDev)
 - Stack:           MileageExpenseStack-met893 (old root-level stack, stale)
@@ -67,11 +67,12 @@ BASE_OUTPUTS_PATH=/path/to/cognito-s3-stack-893/base_outputs.json \
 - Receipts bucket: met893-receipts (data retained, not migrated yet)
 - Tables:          met893-vehicles, met893-trips, met893-expenses (data retained, not migrated yet)
 
-## Redeploy command (your personal deployment)
+## Redeploy command (apps-893 active deployment)
 ```bash
-cd /Users/ltm893/Dev/projects/mileage-expense-tracker-893/backend
-ID_PREFIX=dliv893 \
-USER_POOL_ID=us-east-1_A4MFXeYS7 \
+cd /Users/ltm893/Dev/projects/apps-893/mileage-expense-tracker-893/backend
+AWS_PROFILE=dliv-admin \
+ID_PREFIX=apps-893 \
+USER_POOL_ID=us-east-1_Iijv2ET6V \
 AWS_REGION=us-east-1 \
   ./scripts/deploy.sh
 ```

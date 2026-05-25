@@ -9,6 +9,9 @@ node_modules/
 met_outputs.json
 ios/**/met_outputs.json
 
+# Deploy state (persists API Gateway ID between deploys — never commit)
+.met_deploy_state
+
 # macOS
 .DS_Store
 
