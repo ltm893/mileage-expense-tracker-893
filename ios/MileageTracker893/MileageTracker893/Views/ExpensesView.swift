@@ -338,14 +338,9 @@ struct AddExpenseView: View {
 
     private var detailsSection: some View {
         Section("Details") {
-            HStack {
-                Text("$").foregroundStyle(AppColors.secondaryText)
-                TextField("Amount", text: $amount).keyboardType(.decimalPad)
-                if parsedAmount > 0 {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppColors.success).font(.caption)
-                }
-            }
+            TextField("Amount (e.g. 12.50)", text: $amount)
+                .keyboardType(.decimalPad)
+                .id("add-expense-amount")
             DatePicker("Date", selection: $expenseDate, displayedComponents: .date)
                 .tint(AppColors.accent)
             HStack {
@@ -582,10 +577,9 @@ struct ExpenseDetailView: View {
             }
 
             Section("Details") {
-                HStack {
-                    Text("$").foregroundStyle(AppColors.secondaryText)
-                    TextField("Amount", text: $amount).keyboardType(.decimalPad)
-                }
+                TextField("Amount (e.g. 12.50)", text: $amount)
+                    .keyboardType(.decimalPad)
+                    .id("edit-expense-amount")
                 DatePicker("Date", selection: $expenseDate, displayedComponents: .date)
                     .tint(AppColors.accent)
                 TextField("Merchant / Vendor", text: $merchant)

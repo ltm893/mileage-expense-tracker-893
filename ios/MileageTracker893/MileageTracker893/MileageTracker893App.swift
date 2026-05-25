@@ -58,6 +58,8 @@ struct MileageTracker893App: App {
 
         // ── Table / List ──────────────────────────────────────────────────────
         UITableView.appearance().backgroundColor       = bg
-        UITableViewCell.appearance().backgroundColor   = surface
+        // NOTE: Do NOT set UITableViewCell.appearance().backgroundColor globally —
+        // it breaks keyboardType on TextFields inside SwiftUI Form/List by
+        // interfering with the UIKit responder chain that SwiftUI uses internally.
     }
 }

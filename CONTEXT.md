@@ -120,6 +120,7 @@ Display name: `MilesExpenses` (set via `CFBundleDisplayName` in Info.plist)
 - Regenerate PNGs: `for size in 20 29 40 58 60 76 80 87 120 152 167 180 1024; do rsvg-convert -w $size -h $size "$SVG" -o "$OUT/icon_${size}.png"; done`
 
 ## Known fixes applied
+- `MileageTracker893App.swift` — removed `UITableViewCell.appearance().backgroundColor = surface` from `applyAppearance()` — setting this globally breaks `.keyboardType` on all TextFields inside SwiftUI Form/List by interfering with the UIKit responder chain; decimal/number pads were rendering as phone pad instead
 - `Models.swift` — `decodeIfPresent` on all fields — DynamoDB omits undefined fields
 - `deploy.sh` REPO_ROOT — fixed to `${BACKEND_DIR}/..`
 - Stack + resource names — all derived from idPrefix

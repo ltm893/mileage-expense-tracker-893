@@ -121,18 +121,16 @@ export const handler = async (
         "expenseDate = :date",
         "merchant = :merchant",
         "notes = :notes",
-        "ocrStatus = :ocrStatus",
         "updatedAt = :ts",
       ];
 
       const exprValues: Record<string, unknown> = {
-        ":cat":       body.category,
-        ":amt":       body.amount,
-        ":date":      body.expenseDate,
-        ":merchant":  body.merchant    ?? "",
-        ":notes":     body.notes       ?? "",
-        ":ocrStatus": body.receiptS3Key ? "pending" : "none",
-        ":ts":        new Date().toISOString(),
+        ":cat":      body.category,
+        ":amt":      body.amount,
+        ":date":     body.expenseDate,
+        ":merchant": body.merchant ?? "",
+        ":notes":    body.notes    ?? "",
+        ":ts":       new Date().toISOString(),
       };
 
       if (body.vehicleId) {
@@ -140,9 +138,14 @@ export const handler = async (
         exprValues[":vid"] = body.vehicleId;
       }
 
+      // Only update receiptS3Key + ocrStatus when a NEW receipt is being attached.
+      // Never overwrite ocrStatus if the key isn't changing — the OCR Lambda may
+      // have already set it to "complete" or "failed".
       if (body.receiptS3Key) {
         updateParts.push("receiptS3Key = :s3key");
-        exprValues[":s3key"] = body.receiptS3Key;
+        updateParts.push("ocrStatus = :ocrStatus");
+        exprValues[":s3key"]    = body.receiptS3Key;
+        exprValues[":ocrStatus"] = "pending";
       }
 
       const result = await ddb.send(
