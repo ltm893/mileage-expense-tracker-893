@@ -11,9 +11,11 @@ enum DateRangeFilter: String, CaseIterable, Identifiable {
     case last90     = "Last 90 Days"
     case thisYear   = "This Year"
     case allTime    = "All Time"
+    case custom     = "Custom"
 
     var id: String { rawValue }
 
+    /// Lower bound for preset ranges. Custom ranges use the dates the user picks.
     func startDate() -> Date? {
         let cal = Calendar.current
         let now = Date()
@@ -22,7 +24,7 @@ enum DateRangeFilter: String, CaseIterable, Identifiable {
         case .last30:     return cal.date(byAdding: .day, value: -30, to: now)
         case .last90:     return cal.date(byAdding: .day, value: -90, to: now)
         case .thisYear:   return cal.date(from: cal.dateComponents([.year], from: now))
-        case .allTime:    return nil
+        case .allTime, .custom: return nil
         }
     }
 }
@@ -37,12 +39,38 @@ final class SummaryViewModel: ObservableObject {
     @Published var isLoading:    Bool      = false
     @Published var errorMessage: String?   = nil
     @Published var filter:       DateRangeFilter = .allTime
+    @Published var customStart:  Date = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+    @Published var customEnd:    Date = Date()
 
     private let api = NetworkService.shared
 
     private static let isoDF: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; return f
     }()
+
+    private static let displayDF: DateFormatter = {
+        let f = DateFormatter(); f.dateStyle = .medium; f.timeStyle = .none; return f
+    }()
+
+    /// Label used in the export card and CSV headers.
+    var periodLabel: String {
+        switch filter {
+        case .custom:
+            return "\(Self.displayDF.string(from: customStart)) – \(Self.displayDF.string(from: customEnd))"
+        default:
+            return filter.rawValue
+        }
+    }
+
+    /// Filename-safe period token.
+    var periodSlug: String {
+        switch filter {
+        case .custom:
+            return "\(Self.isoDF.string(from: customStart))_to_\(Self.isoDF.string(from: customEnd))"
+        default:
+            return filter.rawValue.lowercased().replacingOccurrences(of: " ", with: "_")
+        }
+    }
 
     func load() async {
         isLoading = true; errorMessage = nil
@@ -62,13 +90,28 @@ final class SummaryViewModel: ObservableObject {
     }
 
     var filteredTrips: [Trip] {
-        guard let start = filter.startDate() else { return trips }
-        return trips.filter { parse($0.tripDate).map { $0 >= start } ?? true }
+        trips.filter { isInRange($0.tripDate) }
     }
 
     var filteredExpenses: [Expense] {
-        guard let start = filter.startDate() else { return expenses }
-        return expenses.filter { parse($0.expenseDate).map { $0 >= start } ?? true }
+        expenses.filter { isInRange($0.expenseDate) }
+    }
+
+    /// Inclusive of the chosen start and end calendar days.
+    private func isInRange(_ dateString: String) -> Bool {
+        if filter == .allTime { return true }
+        guard let date = parse(dateString) else { return true }
+
+        if filter == .custom {
+            let cal = Calendar.current
+            let start = cal.startOfDay(for: customStart)
+            let endDay = cal.startOfDay(for: customEnd)
+            guard let endExclusive = cal.date(byAdding: .day, value: 1, to: endDay) else { return true }
+            return date >= start && date < endExclusive
+        }
+
+        guard let start = filter.startDate() else { return true }
+        return date >= start
     }
 
     // MARK: - Mileage stats
@@ -154,14 +197,14 @@ final class SummaryViewModel: ObservableObject {
 
     func combinedCSV() -> String {
         """
-        === MILEAGE SUMMARY (\(filter.rawValue)) ===
+        === MILEAGE SUMMARY (\(periodLabel)) ===
         Total Trips,\(totalTrips)
         Total Miles,\(String(format: "%.2f", totalMiles))
         Avg Miles per Trip,\(String(format: "%.2f", avgMilesPerTrip))
 
         === TRIPS ===
         \(tripsCSV())
-        === EXPENSE SUMMARY (\(filter.rawValue)) ===
+        === EXPENSE SUMMARY (\(periodLabel)) ===
         Total Expenses,\(String(format: "%.2f", totalExpenses))
         Vehicle Expenses,\(String(format: "%.2f", vehicleExpenseTotal))
         General Expenses,\(String(format: "%.2f", generalExpenseTotal))
@@ -262,6 +305,26 @@ struct SummaryView: View {
                     }
                 }
                 .padding(.horizontal, 2)
+            }
+
+            if vm.filter == .custom {
+                VStack(spacing: 4) {
+                    DatePicker(
+                        "From",
+                        selection: $vm.customStart,
+                        in: ...vm.customEnd,
+                        displayedComponents: .date
+                    )
+                    DatePicker(
+                        "To",
+                        selection: $vm.customEnd,
+                        in: vm.customStart...,
+                        displayedComponents: .date
+                    )
+                }
+                .font(.subheadline)
+                .foregroundStyle(AppColors.primary)
+                .tint(AppColors.accent)
             }
         }
         .padding(16)
@@ -373,7 +436,7 @@ struct SummaryView: View {
                 .font(.headline)
                 .foregroundStyle(AppColors.primary)
 
-            Text("Exports trips and expenses for the selected period (\(vm.filter.rawValue)) as a CSV file.")
+            Text("Exports trips and expenses for the selected period (\(vm.periodLabel)) as a CSV file.")
                 .font(.caption)
                 .foregroundStyle(AppColors.secondaryText)
 
@@ -414,7 +477,7 @@ struct SummaryView: View {
             let csvString: String
             let fileName: String
             let today    = formattedToday()
-            let period   = vm.filter.rawValue.lowercased().replacingOccurrences(of: " ", with: "_")
+            let period   = vm.periodSlug
 
             switch mode {
             case .trips:
