@@ -13,9 +13,7 @@ Standalone, forkable mileage and expense tracker. Deploy your own AWS backend ag
 - **Standalone**: Not nested inside cognito-s3-stack-893
 
 ## Repo family
-- `cognito-s3-stack-893` — forkable base stack (optional dependency)
-- `mileage-expense-tracker-893` — this repo ✅ complete
-- `music-player-893` — not created yet
+Full map: [cognito-s3-stack-893](https://github.com/ltm893/cognito-s3-stack-893#repo-family). This repo can share that user pool. It deploys and runs on its own when given any Cognito user pool.
 
 ## Deploy modes
 ### Option A — Standalone (any Cognito User Pool)
