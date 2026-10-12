@@ -36,7 +36,7 @@ All resource names are prefixed with `{id}` — no hardcoded names, no same-acco
 ## Prerequisites
 
 - AWS CLI configured (`aws configure`)
-- AWS CDK bootstrapped (`npx cdk bootstrap`)
+- AWS CDK bootstrapped once in that account and region. Steps: [Bootstrap CDK](https://github.com/ltm893/cognito-s3-stack-893#bootstrap-cdk)
 - Node.js 20+
 
 ## Deploy backend
